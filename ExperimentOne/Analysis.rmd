@@ -1,0 +1,310 @@
+---
+title             : "Transient and stable predictions affect motion perception, Exp. 1 - Analysis document"
+shorttitle        : "Transient and stable predictions affect motion perception, Exp. 1 - Analysis document"
+
+author: 
+  - name          : "Matan Mazor"
+    affiliation   : "1,2,3"
+    corresponding : yes    # Define only one corresponding author
+    address       : ""
+    email         : "mtnmzor@gmail.com"
+  #   role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+    
+  - name          : "Nick Simpson"
+    affiliation   : "1,2"
+    
+  - name          : "Kirsten Rittershofer"
+    affiliation   : "1,2"
+    
+  - name          : "Emma K. Ward"
+    affiliation   : "1,2"
+    
+  - name          : "Clare Press"
+    affiliation   : "1,2"
+
+affiliation:
+  - id            : "1"
+    institution   : "Birkbeck, University of London"
+  - id            : "2"
+    institution   : "Wellcome Centre for Human Neuroimaging, UCL"
+  - id            : "3"
+    institution    : "Department of Experimental Psychology, University of Oxford"
+    
+
+
+abstract: |
+  
+  
+  
+  <!-- https://tinyurl.com/ybremelq -->
+  
+keywords          : "X"
+wordcount         : "X"
+
+floatsintext      : no
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+
+documentclass     : "apa6"
+classoption       : "man"
+output            : papaja::apa6_word
+bibliography: references.bib
+header-includes:
+  - \usepackage[document]{ragged2e}
+---
+
+```{r setup, include = FALSE}
+library('groundhog')
+packages = c(
+    'papaja',
+    'tidyverse',
+    'lsr', 
+    'pwr', 
+    'dplyr',
+    'ggplot2',
+    'ggimage',
+    'lattice',
+    'gridExtra',
+    'quickpsy'
+  )
+groundhog.library(packages, "2023-10-16")
+r_refs("r-references.bib")
+
+
+r_refs("references.bib")
+knitr::opts_chunk$set(fig.pos = "!H", out.extra = "", warning = FALSE)
+```
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+# Motivation
+
+A study by @phan2022downwards found that our perception of acceleration/deceleration is biased depending on the motion direction: Objects moving downwards were perceived as accelerating less and/or decelerating more compared to objects moving upwards with the same acceleration/deceleration. This was not the case for objects moving to the left or right. @phan2022downwards explain these findings by people having adapted to the more commonly experienced downward acceleration. In the current study, we aim to replicate the bias for the vertical motion directions. Additionally, we want to test whether acceleration/deceleration perception for horizontally moving objects can also be biased when throughout the course of the experiment, one of these directions is mostly associated with acceleration and the other one with deceleration. <!-- We wish to investigate whether the taught bias elicits the same or different perceptual effect as the lifelong bias. -->
+
+# Methods
+
+We report how we determined our sample size, all data exclusions (if any), all manipulations, and all measures in the study. <!-- 21-word solution (Simmons, Nelson & Simonsohn, 2012; retrieved from http://ssrn.com/abstract=2160588) -->
+
+## Participants
+
+The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, and their age between 18 and 60. We will collect data until we reach 100 included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 15 minutes to complete. Participants will be paid £2 for their participation, equivalent to an hourly wage of £8.
+
+## Study Design
+
+Participants will see a basketball court displayed over 80% of the screen height with a virtual height and width of 4 m (Fig. \@ref(fig:design1)). On each trial, a basketball appears on the court and either travels up, down, left, or right. The ball can be accelerating, decelerating, or travelling at a constant velocity and participants have to press the 'A' key if they think the ball is accelerating and the 'D' key if they think it is decelerating. They can respond as soon as the ball disappeared from the court and there is no time limit for their response. Participants are given written instructions prior to the task and at all times are shown the instructions "accelerating: a", "decelerating: d", and the number of trials completed in the current block. The next trial starts 1500 ms after a response has been made.
+
+```{r design1, echo=FALSE, fig.cap="**Layout.** A basketball court is constantly shown on the screen and a basketball travels across the court in the horizontal or vertical directions, shown here going down (opacity of the ball illustrates time). Participants must decide if the ball is accelerating or decelerating and can respond once the ball has left the court.", out.width = '50%'}
+knitr::include_graphics("design2.png")
+```
+
+To avoid participants using the amount of time the ball is on the screen as an indication of acceleration or deceleration, the ball remains on the screen for one of two screen durations, 1000 or 1500 ms. For each of the two screen durations, 11 equally spaced acceleration values are chosen from the range of ± $\frac{2 \cdot court \: size}{screen \: duration ^ 2}$. For the vertical trials, an approximately Gaussian distribution of values is chosen with a mean of 0 m/s^2^ (Fig. \@ref(fig:design2), bottom row). For the horizontal trials, a positive skew is given to one direction (Fig. \@ref(fig:design2), middle row, hereafter acc direction) and a negative skew to the other (Fig. \@ref(fig:design2), top row, hereafter dec direction), randomly assigned per participant. The skewed distributions have a mean acceleration of ± 1.74 m/s^2^. The distributions for the horizontal directions also include three extreme trials with maximal acceleration/deceleration. These extreme values are presented in the first block on the 1st, 3rd, and 5th trial of the respective direction to induce a strong expectation early in the experiment. 
+
+```{r design2, echo=FALSE, fig.cap="**Acceleration distributions.** The distributions for the horizontal directions are skewed in order to induce an expectation of acceleration in one direction (middle) and of deceleration in the other (top). The skewed distributions have a mean acceleration of ± 1.74 m/s^2^. The vertical directions have an approximately Gaussian distribution (bottom) centred around a mean of 0 m/s^2^ (constant velocity). Long trials (green) remain on the screen for 1500 ms and short trials (blue) for 1000 ms. Extreme trials (red) have maximal acceleration/deceleration and are used to induce a strong expectation within the first five trials in that direction. All extreme trials have a screen duration of 1000 ms.", out.width = '110%'}
+
+library(ggplot2)
+library(ggimage)
+library(lattice)
+library(gridExtra)
+library(dplyr)
+
+acc_values = c(-8, -6.4, -4.8, -3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -0.7, 0, 0.7, 1.1, 1.4, 1.6, 2.1, 2.8, 3.2, 3.54, 4.8, 6.4, 8);
+acc_types = c("Extreme","Short","Short","Long","Short","Long","Long","Short","Long", "Short", "Long","Short","Long", "Short", "Long","Short","Long","Long","Short","Long","Short","Short","Extreme");
+vert = data.frame(
+  acc = c(-6.4, -4.8, -3.54, -3.54, -3.2, -2.8, -2.1, -2.1, -2.1, -1.6, -1.6, -1.6, -1.4, -1.4, -1.4, -1.4, -1.1,-1.1, -0.7, -0.7, -0.7, -0.7, -0.7, 0, 0, 0, 0, 0, 0, 0, 0, 0.7, 0.7, 0.7, 0.7, 0.7, 1.1, 1.1, 1.4, 1.4, 1.4, 1.4, 1.6, 1.6, 1.6, 2.1, 2.1, 2.1, 2.8, 3.2, 3.54, 3.54, 4.8, 6.4)
+)
+
+pos = data.frame(
+  acc = c(-3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -1.1, -0.7, -0.7, -0.7, 0, 0, 0, 0, 0.7, 0.7, 0.7, 0.7, 1.1, 1.1, 1.4, 1.4, 1.4, 1.6, 1.6, 1.6, 1.6, 2.1, 2.1, 2.1, 2.1, 2.1, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.54, 3.54, 3.54, 4.8, 4.8, 6.4, 8, 8, 8)
+)
+
+neg = data.frame(
+  acc = c(3.54, 3.2, 2.8, 2.1, 1.6, 1.4, 1.1, 1.1, 0.7, 0.7, 0.7, 0, 0, 0, 0, -0.7, -0.7, -0.7, -0.7, -1.1, -1.1, -1.4, -1.4, -1.4, -1.6, -1.6, -1.6, -1.6, -2.1, -2.1, -2.1, -2.1, -2.1, -2.8, -2.8, -2.8, -2.8, -2.8, -2.8, -3.2, -3.2, -3.2, -3.2, -3.2, -3.2, -3.54, -3.54, -3.54, -4.8, -4.8, -6.4, -8, -8, -8)
+)
+
+color_table <- tibble(
+  Trial = c("Extreme", "Long", "Short"),
+  Color = c("red", "darkgreen", "blue4")
+)
+
+mvert <- ggplot(vert, aes(x=acc)) + geom_density(aes(y =after_stat(density)*(30))) + xlim(-8, 8)
+mneg <- ggplot(neg, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(30))) + xlim(-8, 8)
+mpos <- ggplot(pos, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(30))) + xlim(-8, 8)
+pvert <- ggplot_build(mvert)
+pneg <- ggplot_build(mneg)
+ppos <- ggplot_build(mpos)
+densevert = 0;
+denseneg = 0;
+densepos = 0;
+for(value in acc_values){
+  densevert = c(densevert, pvert$data[[1]]$y[which.min(abs(pvert$data[[1]]$x - value))]);
+  denseneg = c(denseneg, pneg$data[[1]]$y[which.min(abs(pneg$data[[1]]$x - value))]);
+  densepos = c(densepos, ppos$data[[1]]$y[which.min(abs(ppos$data[[1]]$x - value))]);
+}
+
+df <- data.frame(
+  plot = c(rep("Vertical",23), rep("Negative Skew",23), rep("Positive Skew",23)),
+  Acceleration = rep(acc_values, 3),
+  Trial = rep(acc_types, 3),
+  Frequency = c(0,1,1,2,1,1,3,3,4,2,5,8,5,2,4,3,3,1,1,2,1,1,0,3,1,2,3,6,6,5,4,3,2,4,4,3,2,1,1,1,1,1,1 ,0,0,0,0,0,0,1,1,1,1,1,1,2,3,4,4,2,3,4,5,6,6,3,2,1,3),
+  Density = c(densevert[-1], denseneg[-1], densepos[-1])
+)
+
+a <- ggplot(df, aes(x = Acceleration, y = Frequency)) +
+  geom_bar(stat="identity", aes(fill = Trial)) +
+  geom_line(aes(y = Density)) +
+  geom_area(aes(y = Density), alpha = 0.2, fill = "#56B4E9") +
+  scale_fill_manual(values = color_table$Color) +
+  #ggtitle("Acceleration Distributions") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x=element_text(size=4, angle=90),
+        axis.text.y=element_text(size=5),
+        axis.title=element_text(size=10),
+        plot.title=element_text(size=10),
+        legend.title=element_text(size=6),
+        legend.text=element_text(size=6),
+        strip.text.y = element_text(size = 10),
+        legend.key.size = unit(0.2, 'cm')) + 
+  scale_x_continuous(breaks = acc_values) +
+  facet_grid(rows = vars(plot)) 
+a
+```
+
+The experiment starts with 16 practice trials - one accelerating and one decelerating trial for each of the two screen durations and four motion directions. For the vertical trials, acceleration values of -3.2, -2.8, 2.8, and 3.2 m/s^2^ are presented. For the acc direction, values of -1.6, -1.4, 3.6, and 8 m/s^2^ are presented and for the dec direction, -8, -3.6, 1.4, and 1.6 m/s^2^ are presented. Participants only receive feedback on their performance during practice. Afterwards, they complete eight blocks of 25 trials with the acceleration values shown in Fig. \@ref(fig:design2) and between each block they can take a short break. Trials alternate between vertical and horizontal, but the direction within the plane, the acceleration value and screen duration are pseudo-randomised.
+
+
+### Randomization
+
+The acc and dec directions for each participant, the motion direction within the plane, the acceleration value and screen duration for each trial will be determined pseudo-randomly by the Mersenne Twister pseudorandom number generator, initialized in a way that ensures registration time-locking [@mazor2019novel].
+
+
+## Data analysis
+
+### Rejection criteria
+
+<!-- any RT exclusions? -->
+Participants will be excluded if their overall accuracy falls below 75%.
+
+### Hypotheses and analysis plan
+
+This study is designed to test the perception of acceleration comparing motion directions associated with acceleration to ones associated with deceleration, either throughout life (up/down) or within this experiment (left/right).
+
+The practice and extreme trials will be removed from the analysis, along with acceleration values exceeding ±3.6m/s^2^, such that all motion conditions include the same acceleration values. Psychometric curves will be fitted to the data from each participant using the quickpsy package in R [@linares2016quickpsy] separately for the four motion directions and two screen durations, see Fig. \@ref(fig:psychometriccurve) for an example participant. The point of subjective constant velocity (PSCV) will be extracted from the fitted curves.
+All statistical tests will be two-tailed and the significance level set to 0.05.
+
+
+
+```{r psychometriccurve, echo=FALSE, fig.cap="Example Psychometric Curve. An example set of psychometric curves plotted for a pilot participant. The screen duration and trial conditions have been separated and the PSCV extracted for each plot.", out.width = '100%'}
+library("quickpsy")
+library("ggplot2")
+library("dplyr")
+data_frame <- read.csv("sample_participant.csv");
+df = filter(data_frame, subject_id=="5c26ddc670d93a000120db8f");
+fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
+plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
+```
+
+*Hypothesis 1 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT INITIAL SPEED)*: We will test the null hypothesis that accuracy is at chance (50%) for trials where the initial speed of accelerating balls is on average higher than the initial speed of decelerating balls. Accuracy will be calculated for decelerating trials with an initial speed of less than 3.7 m/s and accelerating trials with an initial speed of more than 3.7 m/s and a one-sample t-test will be performed.
+
+*Hypothesis 2 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT FINAL SPEED)*: We will test the null hypothesis that accuracy is at chance (50%) for trials where the final speed of accelerating balls is on average lower than the final speed of decelerating balls. Accuracy will be calculated for decelerating trials with a final speed of more than 3.7 m/s and accelerating trials with a final speed of less than 3.7 m/s and a one-sample t-test will be performed.
+
+*Hypothesis 3 (ACCELERATION PERCEPTION FOR UPWARD VS. DOWNWARD MOTION)*: We will test the null hypothesis that vertical acceleration perception is similar for upward and downward motion. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for upward and downward motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for upward vs. downward motion.
+
+*Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)*: We will test the null hypothesis that horizontal acceleration perception is similar for acc and dec directions. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for the acc and dec direction. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec directions.
+
+*Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)*: We will test the null hypothesis that the PSCV is similar for upward and downward motion. This will be tested with a paired-samples t-test on the PSCV for upward and downward motion, averaged across the two screen durations.
+
+*Hypothesis 6 (PSCV FOR ACC VS. DEC)*: We will test the null hypothesis that the PSCV is similar for acc and dec directions. This will be tested with a paired-samples t-test on the PSCV for the acc and dec direction, averaged across the two screen durations.
+
+Exploratory analyses will compare slope and accuracy measures for upward vs. downward motion and acc vs. dec motion.
+
+## Sample size justification
+
+The study by Phan, Harris, and Kingdom (2023, in preparation) found an effect size of 0.4 for the difference in the PSCV for upward compared to downward motion. With 100 participants, we will have a statistical power of 98% to detect an effect of this size. By overpowering for the vertical effect, we hope to ensure any horizontal effects are also well powered enough with this sample size. It also allows us to get a good estimate of effect sizes for future studies.
+
+# Analysis
+
+## Hypothesis 1 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT INITIAL SPEED)
+
+## Hypothesis 2 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT FINAL SPEED)
+## Hypothesis 3 (ACCELERATION PERCEPTION FOR UPWARD VS. DOWNWARD MOTION)
+## Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
+## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
+## Hypothesis 6 (PSCV FOR ACC VS. DEC)
+
+QUESTIONS:
+Mean across screen duration in bias analysis (matan originally didn't but it makes sense to if we are doing that for the pscvs)
+What threshold shall we set for disallowing participant pcsvs? 8 or 3.6? Should it be that any pscv of the 8 cant be outside the threshold, or just the means, or just the means of the plane we are currently looking at?
+For next experiment should we specify that participants must get above 75 in included trials, so removing outside 3.6 and not including practice? Currently we include all trials which is quite generous.
+Should we still include bias analysis or say that similar effects were seen and so we simply choose the more informative one?
+
+```{r calculate_sample_size}
+# Load in experiment one results and filter out the people who's accuracy is <0.75
+# Then adjust data frame for fitting of psychometric curves
+data_frame <- read.csv("expOneResults.txt");
+df = data_frame %>% 
+  filter(trial_type == "moving-image") %>%
+  mutate(acceleration = as.numeric(acceleration)) %>%
+  mutate(numerical_correct = if_else(correct=='true', 1, if_else(acceleration == 0, NaN, 0))) %>%
+  mutate(recodeKey = if_else(key_response == 'a', 1, if_else(key_response == 'd', 0, NaN))) %>%
+  mutate(recodeDir = if_else((direction == 'RIGHT' & right_bias == 'Positive') | (direction == 'LEFT' & left_bias == 'Positive'), 'ACCELERATING', if_else((direction == 'RIGHT' | direction == 'LEFT'), 'DECELERATING', direction))) %>%
+  group_by(subject_id) %>%
+  mutate(average_accuracy = mean(numerical_correct, na.rm = TRUE)) %>%
+  ungroup() %>%
+  filter(average_accuracy >= 0.75) %>%
+  filter(practice == "false") %>%
+  filter(abs(as.numeric(acceleration))<=3.6)
+
+fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
+#plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
+
+# fullFit$thresholds is the pscv for each participant, each direction, and each screen duration
+# We want to ignore vertical directions then mean the pscv for screen duration, then paired samples t-test between accelerating and decelerating
+# We also remove pcsv's that are outside our range of presented values
+pscvs = fullFit$thresholds %>%
+  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
+  pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = "sd_") %>%
+  mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
+  select(subject_id, recodeDir, mean_pscv) %>%
+  pivot_wider(names_from = recodeDir, values_from = mean_pscv) %>%
+  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
+   
+# Use cohensD to calculate the effect size and then sample size
+effect_size = cohensD(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
+sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
+
+
+# Other analysis technique is: for each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for acc and dec motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec motion.
+
+bias = df %>% 
+  group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
+  summarise(prop_acc=mean(recodeKey)) %>% 
+  group_by(subject_id, recodeDir) %>% 
+  summarise(bias=mean(prop_acc)) %>% 
+  spread(recodeDir, bias)
+
+bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
+bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
+
+```
+Using the effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. 
+
+# References
+
+```{=tex}
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+```
+::: {#refs custom-style="Bibliography"}
+:::
+
+```{=tex}
+\endgroup
+```
