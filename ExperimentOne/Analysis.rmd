@@ -214,7 +214,7 @@ The study by Phan, Harris, and Kingdom (2023, in preparation) found an effect si
 
 ```{r load_data, echo=FALSE}
 
-data_frame <- read.csv("expOneResults.txt");
+data_frame <- read.csv("../Results/expOneResults.txt");
 number_of_original_data_sets = length(unique(data_frame$subject_id))
 # Clean the data by numericalising
 # Exclude participants who fail to get 75% total accuracy
