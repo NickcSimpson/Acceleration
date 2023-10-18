@@ -108,12 +108,6 @@ To avoid participants using the amount of time the ball is on the screen as an i
 
 ```{r design2, echo=FALSE, fig.cap="**Acceleration distributions.** The distributions for the horizontal directions are skewed in order to induce an expectation of acceleration in one direction (middle) and of deceleration in the other (top). The skewed distributions have a mean acceleration of ± 1.74 m/s^2^. The vertical directions have an approximately Gaussian distribution (bottom) centred around a mean of 0 m/s^2^ (constant velocity). Long trials (green) remain on the screen for 1500 ms and short trials (blue) for 1000 ms. Extreme trials (red) have maximal acceleration/deceleration and are used to induce a strong expectation within the first five trials in that direction. All extreme trials have a screen duration of 1000 ms.", out.width = '110%'}
 
-library(ggplot2)
-library(ggimage)
-library(lattice)
-library(gridExtra)
-library(dplyr)
-
 acc_values = c(-8, -6.4, -4.8, -3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -0.7, 0, 0.7, 1.1, 1.4, 1.6, 2.1, 2.8, 3.2, 3.54, 4.8, 6.4, 8);
 acc_types = c("Extreme","Short","Short","Long","Short","Long","Long","Short","Long", "Short", "Long","Short","Long", "Short", "Long","Short","Long","Long","Short","Long","Short","Short","Extreme");
 vert = data.frame(
@@ -195,20 +189,8 @@ Participants will be excluded if their overall accuracy falls below 75%.
 
 This study is designed to test the perception of acceleration comparing motion directions associated with acceleration to ones associated with deceleration, either throughout life (up/down) or within this experiment (left/right).
 
-The practice and extreme trials will be removed from the analysis, along with acceleration values exceeding ±3.6m/s^2^, such that all motion conditions include the same acceleration values. Psychometric curves will be fitted to the data from each participant using the quickpsy package in R [@linares2016quickpsy] separately for the four motion directions and two screen durations, see Fig. \@ref(fig:psychometriccurve) for an example participant. The point of subjective constant velocity (PSCV) will be extracted from the fitted curves.
+The practice and extreme trials will be removed from the analysis, along with acceleration values exceeding ±3.6m/s^2^, such that all motion conditions include the same acceleration values. Psychometric curves will be fitted to the data from each participant using the quickpsy package in R [@linares2016quickpsy] separately for the four motion directions and two screen durations. The point of subjective constant velocity (PSCV) will be extracted from the fitted curves.
 All statistical tests will be two-tailed and the significance level set to 0.05.
-
-
-
-```{r psychometriccurve, echo=FALSE, fig.cap="Example Psychometric Curve. An example set of psychometric curves plotted for a pilot participant. The screen duration and trial conditions have been separated and the PSCV extracted for each plot.", out.width = '100%'}
-library("quickpsy")
-library("ggplot2")
-library("dplyr")
-data_frame <- read.csv("sample_participant.csv");
-df = filter(data_frame, subject_id=="5c26ddc670d93a000120db8f");
-fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
-plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
-```
 
 *Hypothesis 1 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT INITIAL SPEED)*: We will test the null hypothesis that accuracy is at chance (50%) for trials where the initial speed of accelerating balls is on average higher than the initial speed of decelerating balls. Accuracy will be calculated for decelerating trials with an initial speed of less than 3.7 m/s and accelerating trials with an initial speed of more than 3.7 m/s and a one-sample t-test will be performed.
 
@@ -230,26 +212,15 @@ The study by Phan, Harris, and Kingdom (2023, in preparation) found an effect si
 
 # Analysis
 
-## Hypothesis 1 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT INITIAL SPEED)
+```{r load_data, echo=FALSE}
 
-## Hypothesis 2 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT FINAL SPEED)
-## Hypothesis 3 (ACCELERATION PERCEPTION FOR UPWARD VS. DOWNWARD MOTION)
-## Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
-## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
-## Hypothesis 6 (PSCV FOR ACC VS. DEC)
-
-QUESTIONS:
-Mean across screen duration in bias analysis (matan originally didn't but it makes sense to if we are doing that for the pscvs)
-What threshold shall we set for disallowing participant pcsvs? 8 or 3.6? Should it be that any pscv of the 8 cant be outside the threshold, or just the means, or just the means of the plane we are currently looking at?
-For next experiment should we specify that participants must get above 75 in included trials, so removing outside 3.6 and not including practice? Currently we include all trials which is quite generous.
-Should we still include bias analysis or say that similar effects were seen and so we simply choose the more informative one?
-
-```{r calculate_sample_size}
-# Load in experiment one results and filter out the people who's accuracy is <0.75
-# Then adjust data frame for fitting of psychometric curves
 data_frame <- read.csv("expOneResults.txt");
+number_of_original_data_sets = length(unique(data_frame$subject_id))
+# Clean the data by numericalising
+# Exclude participants who fail to get 75% total accuracy
+# Remove practice trials and acceleration values outside the +/-3.6 range
 df = data_frame %>% 
-  filter(trial_type == "moving-image") %>%
+  filter(trial_type == "moving-image") %>% #Select rows that are trials and not setup etc
   mutate(acceleration = as.numeric(acceleration)) %>%
   mutate(numerical_correct = if_else(correct=='true', 1, if_else(acceleration == 0, NaN, 0))) %>%
   mutate(recodeKey = if_else(key_response == 'a', 1, if_else(key_response == 'd', 0, NaN))) %>%
@@ -261,39 +232,115 @@ df = data_frame %>%
   filter(practice == "false") %>%
   filter(abs(as.numeric(acceleration))<=3.6)
 
-fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
-#plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
+number_of_final_data_sets = length(unique(df$subject_id))
 
-# fullFit$thresholds is the pscv for each participant, each direction, and each screen duration
-# We want to ignore vertical directions then mean the pscv for screen duration, then paired samples t-test between accelerating and decelerating
-# We also remove pcsv's that are outside our range of presented values
-pscvs = fullFit$thresholds %>%
-  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
-  pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = "sd_") %>%
-  mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
-  select(subject_id, recodeDir, mean_pscv) %>%
-  pivot_wider(names_from = recodeDir, values_from = mean_pscv) %>%
-  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
-   
-# Use cohensD to calculate the effect size and then sample size
-effect_size = cohensD(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
-sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
+```
 
 
-# Other analysis technique is: for each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for acc and dec motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec motion.
+## Hypothesis 1 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT INITIAL SPEED)
+```{r check_sensitivity_init, echo=FALSE, cache=TRUE}
+
+acc_controlling_for_init_speed = df %>% 
+  filter((acceleration<0 & initial_speed<3.7) | (acceleration>0 & initial_speed>3.7)) %>%
+  group_by(subject_id) %>%
+  summarize(acc=mean(numerical_correct))
+
+```
+
+People are able to discriminate acceleration without relying on the initial speed. Mean accuracy is `r acc_controlling_for_init_speed$acc%>%mean()` even in trials where the initial_speed of accelerating balls is on average higher than the initial speed of decelerating balls (`r apa_print(acc_controlling_for_init_speed$acc%>%t.test(mu=0.5))$statistic`).
+
+## Hypothesis 2 (ACCELERATION/DECELERATION DISCRIMINATION WITHOUT FINAL SPEED)
+```{r check_sensitivity_final, echo=FALSE, cache=TRUE}
+
+acc_controlling_for_final_speed = df %>% 
+  filter((acceleration<0 & final_speed>3.7) |(acceleration>0 & final_speed<3.8)) %>%
+  group_by(subject_id) %>%
+  summarize(acc=mean(numerical_correct))
+
+```
+
+People are not able to discriminate acceleration without relying on the final speed. Mean accuracy is `r acc_controlling_for_final_speed$acc%>%mean()` in trials where the final speed of accelerating balls is on average lower than the final speed of decelerating balls (`r apa_print(acc_controlling_for_final_speed$acc%>%t.test(mu=0.5))$statistic`).
+
+
+## Hypothesis 3 (ACCELERATION PERCEPTION FOR UPWARD VS. DOWNWARD MOTION)
+```{r check_bias_vertical, echo=FALSE, cache=TRUE}
 
 bias = df %>% 
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
   summarise(prop_acc=mean(recodeKey)) %>% 
   group_by(subject_id, recodeDir) %>% 
+  #group_by(subject_id, recodeDir, screen_duration)
   summarise(bias=mean(prop_acc)) %>% 
   spread(recodeDir, bias)
 
-bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
-bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
-
+vertical_bias = t.test(bias$UP, bias$DOWN, method = "paired")
 ```
-Using the effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. 
+
+People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_bias)$statistic`).
+
+## Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
+```{r check_bias_horizontal, echo=FALSE, cache=TRUE}
+horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, method = "paired")
+```
+People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
+## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
+```{r check_pscv_vertical, echo=FALSE, cache=TRUE}
+fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
+#plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
+
+pscvs = fullFit$thresholds %>%
+  # Use the following if we want to get rid of a participant with anomalous pscvs pre-meaning across screen_duration
+  #mutate(anomalous == if_else(thre>=8 (3.6), 1, 0))
+  #group_by(subject_id) %>%
+  #mutate(deviant == if_else(sum(anomalous)!=0, 1, 0))
+  #filter(deviant == 0)
+  pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
+  mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
+  select(subject_id, recodeDir, mean_pscv) %>%
+  pivot_wider(names_from = recodeDir, values_from = mean_pscv) %>%
+  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8 & abs(UP)<=8 & abs(DOWN)<=8)
+  #filter(abs(ACCELERATING)<=3.6 & abs(DECELERATING)<=3.6 & abs(UP)<=3.6 & abs(DOWN)<=3.6)
+
+# Use this if we allow participants ACC or DEC pscvs to be anomalous
+vertical_pcsvs = pscvs %>% 
+  filter(recodeDir == 'UP' | recodeDir == 'DOWN') %>%
+  filter(abs(UP)<=8 & abs(DOWN)<=8)
+  #filter(abs(UP)<=3.6 & abs(DOWN)<=3.6)
+
+vertical_pscv = t.test(pscvs$UP, pscvs$DOWN, method = "paired")
+```
+People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_pscv)$statistic`).
+## Hypothesis 6 (PSCV FOR ACC VS. DEC)
+```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
+# Use this if we allow participants UP or DOWN pscvs to be anomalous
+horizontal_pcsvs = pscvs %>% 
+  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
+  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
+  #filter(abs(ACCELERATING)<=3.6 & abs(DECELERATING)<=3.6)
+
+horizontal_pscv = t.test(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
+```
+People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
+
+
+# Next Steps
+
+We have both a lifelong and recently learned effect of suppressed perception of expected accelerating motion. This leaves us in a situation where our hypothesis about the length of time that an expectation has been developed affects the direction of suppression and enhancement. What other causes could there be? 
+
+## Eye Motion
+People could be making these judgements based upon estimating a position to which they saccade. Where decelerating objects will remain behind the post-saccade eye position and accelerating objects will surpass the post-saccade eye position. To test this hypothesis, eye tracking could be utilised. Can the average difference between eye position and ball position estimate the participant response?
+
+## Adaptation
+Potentially the repetitive acceleration in one direction is causing an adaptation-like effect where cells/neurons/brain regions are responding less to the repeated stimulus and thus mistake deviations from the norm as repulsion from the true value. This can be tested by altering the cue for the accelerating and decelerating directions. Rather than direction being the cue for the bias, two differently coloured balls could be the cues for bias and the directions randomised on the horizontal plane to avoid adaptation effects.
+
+## Cue Timing
+The cue for expected behaviour is currently shown at the same time as the target because once the ball arrives on the screen the participant will begin judging acceleration and also be made aware of the direction and thus the bias. Perhaps the cue is required to be processed and passed down the perceptual hierarchy before it can cause an enhancement - in faster situations the supression is favoured. The mechanism for this theory is not yet fully realised. This can be tested by showing a cue before the ball arrives on the screen - such as an audio cue or change in background colour.
+
+## Stimulus Integration Across Time
+To judge acceleration, multiple time-points are required to be processed. This slow integration could give time for later processes to up weight any surprising information in the signal. This hypothesis could be tested by repeating the essence of the paradigm with static or briefly presented stimuli.
+
+## Continous Vs Discrete Judgements
+Acceleration values are inherently on a continuous scale which allows us to give responses that align mostly with the truth but may deviate by tiny amounts. Conversely, discrete judgements with large gaps between bins only allow for one thing to be true at a time. So even if the percept is not exactly in that bin, it is still the closest option and creates an enhancement of the expectation rather than a suppression. 
 
 # References
 
