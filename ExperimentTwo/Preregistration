@@ -192,7 +192,7 @@ Exploratory analyses will compare slope and accuracy measures for accelerating v
 ```{r calculate_sample_size}
 # Load in experiment one results and filter out the people who's accuracy is <0.75
 # Then adjust data frame for fitting of psychometric curves
-data_frame <- read.csv("expOneResults.txt");
+data_frame <- read.csv("../Results/expOneResults.txt");
 df = data_frame %>% 
   filter(trial_type == "moving-image") %>%
   mutate(acceleration = as.numeric(acceleration)) %>%
