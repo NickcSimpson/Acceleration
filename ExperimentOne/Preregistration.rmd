@@ -187,7 +187,7 @@ All statistical tests will be two-tailed and the significance level set to 0.05.
 library("quickpsy")
 library("ggplot2")
 library("dplyr")
-data_frame <- read.csv("sample_participant.csv");
+data_frame <- read.csv("../Results/sample_participant.csv");
 df = filter(data_frame, subject_id=="5c26ddc670d93a000120db8f");
 fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
 plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
