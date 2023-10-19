@@ -303,7 +303,6 @@ pscvs = fullFit$thresholds %>%
 
 # Use this if we allow participants ACC or DEC pscvs to be anomalous
 vertical_pcsvs = pscvs %>% 
-  filter(recodeDir == 'UP' | recodeDir == 'DOWN') %>%
   filter(abs(UP)<=8 & abs(DOWN)<=8)
   #filter(abs(UP)<=3.6 & abs(DOWN)<=3.6)
 
@@ -314,7 +313,6 @@ People have a bias to report downward moving objects as having a more positive a
 ```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
 # Use this if we allow participants UP or DOWN pscvs to be anomalous
 horizontal_pcsvs = pscvs %>% 
-  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
   filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
   #filter(abs(ACCELERATING)<=3.6 & abs(DECELERATING)<=3.6)
 
