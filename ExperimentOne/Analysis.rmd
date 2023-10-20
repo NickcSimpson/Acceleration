@@ -269,7 +269,6 @@ bias = df %>%
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
   summarise(prop_acc=mean(recodeKey)) %>% 
   group_by(subject_id, recodeDir) %>% 
-  #group_by(subject_id, recodeDir, screen_duration)
   summarise(bias=mean(prop_acc)) %>% 
   spread(recodeDir, bias)
 
@@ -289,34 +288,23 @@ fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id
 #plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
 
 pscvs = fullFit$thresholds %>%
-  # Use the following if we want to get rid of a participant with anomalous pscvs pre-meaning across screen_duration
-  #mutate(anomalous == if_else(thre>=8 (3.6), 1, 0))
-  #group_by(subject_id) %>%
-  #mutate(deviant == if_else(sum(anomalous)!=0, 1, 0))
-  #filter(deviant == 0)
   pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
   mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
   select(subject_id, recodeDir, mean_pscv) %>%
-  pivot_wider(names_from = recodeDir, values_from = mean_pscv) %>%
-  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8 & abs(UP)<=8 & abs(DOWN)<=8)
-  #filter(abs(ACCELERATING)<=3.6 & abs(DECELERATING)<=3.6 & abs(UP)<=3.6 & abs(DOWN)<=3.6)
+  pivot_wider(names_from = recodeDir, values_from = mean_pscv)
 
-# Use this if we allow participants ACC or DEC pscvs to be anomalous
-vertical_pcsvs = pscvs %>% 
+vertical_pscvs = pscvs %>% 
   filter(abs(UP)<=8 & abs(DOWN)<=8)
-  #filter(abs(UP)<=3.6 & abs(DOWN)<=3.6)
 
-vertical_pscv = t.test(pscvs$UP, pscvs$DOWN, method = "paired")
+vertical_pscv = t.test(vertical_pscvs$UP, vertical_pscvs$DOWN, method = "paired")
 ```
 People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_pscv)$statistic`).
 ## Hypothesis 6 (PSCV FOR ACC VS. DEC)
 ```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
-# Use this if we allow participants UP or DOWN pscvs to be anomalous
-horizontal_pcsvs = pscvs %>% 
+horizontal_pscvs = pscvs %>% 
   filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
-  #filter(abs(ACCELERATING)<=3.6 & abs(DECELERATING)<=3.6)
 
-horizontal_pscv = t.test(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
+horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, method = "paired")
 ```
 People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
 
