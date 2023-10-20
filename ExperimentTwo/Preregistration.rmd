@@ -238,7 +238,7 @@ bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paire
 bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
 
 ```
-Using the effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. Therefore, collecting a sample of 100 participants will provide adequate power to observe the effect of interest.
+Using the effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. As the effect sizes are similar for both analyses and the psychometric curve analysis has stricter exclusion criteria, we base the power analysis of off the bias analysis. Therefore, collecting a sample of `r bias_sample_size_needed` participants should provide sufficient power to observe the effect of interest.
 
 # References
 
