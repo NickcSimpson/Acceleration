@@ -72,9 +72,6 @@ packages = c(
     'quickpsy'
   )
 groundhog.library(packages, "2023-10-16")
-r_refs("r-references.bib")
-
-
 r_refs("references.bib")
 knitr::opts_chunk$set(fig.pos = "!H", out.extra = "", warning = FALSE)
 ```
