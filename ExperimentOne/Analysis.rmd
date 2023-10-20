@@ -282,6 +282,7 @@ People have a bias to report downward moving objects as having a more positive a
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, method = "paired")
 ```
 People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
+
 ## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
 ```{r check_pscv_vertical, echo=FALSE, cache=TRUE}
 fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
@@ -299,6 +300,7 @@ vertical_pscvs = pscvs %>%
 vertical_pscv = t.test(vertical_pscvs$UP, vertical_pscvs$DOWN, method = "paired")
 ```
 People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_pscv)$statistic`).
+
 ## Hypothesis 6 (PSCV FOR ACC VS. DEC)
 ```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
 horizontal_pscvs = pscvs %>% 
