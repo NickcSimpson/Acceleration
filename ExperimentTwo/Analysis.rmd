@@ -270,9 +270,11 @@ number_of_final_data_sets = length(unique(df$subject_id))
 
 bias = df %>% 
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
-  summarise(prop_acc=mean(recodeKey)) %>% 
+  summarise(prop_acc=mean(recodeKey)) %>%
+  group_by(subject_id, recodeDir, screen_duration) %>% 
+  summarise(screen_bias=mean(prop_acc)) %>% 
   group_by(subject_id, recodeDir) %>% 
-  summarise(bias=mean(prop_acc)) %>% 
+  summarise(bias=mean(screen_bias)) %>% 
   spread(recodeDir, bias)
 
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')

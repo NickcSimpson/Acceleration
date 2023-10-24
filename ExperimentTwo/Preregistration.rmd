@@ -6,7 +6,7 @@ author:
   - name          : "Matan Mazor"
     affiliation   : "1,2,3"
     corresponding : yes    # Define only one corresponding author
-    address       : ""
+    address       : "Department of Experimental Psychology, University of Oxford"
     email         : "mtnmzor@gmail.com"
   #   role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
     
@@ -93,7 +93,7 @@ We report below how we determined our sample size, all exclusion criteria, all m
 
 ## Participants
 
-The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in experiment 1. We will collect data until we reach 100 included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 10 minutes to complete. Participants will be paid around £1.34 for their participation, equivalent to an hourly wage of £8.
+The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in experiment 1. We will collect data until we reach 89 included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 10 minutes to complete. Participants will be paid around £1.34 for their participation, equivalent to an hourly wage of £8.
 
 ## Study Design
 
@@ -178,9 +178,9 @@ Participants will be excluded if their overall accuracy falls below 75% for all 
 
 This study is designed to replicate the repulsive bias for acceleration perception in the horizontal plane when the background does not provide any directional cues. The data will be analysed in the same way as for the previous experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1").
 
-*Hypothesis 1 (ACCELERATION PERCEPTION FOR ACCELERATING VS. DECELERATING DIRECTIONS)*: We will test the null hypothesis that horizontal acceleration perception is similar for accelerating and decelerating directions. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for the accelerating and decelerating direction. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for accelerating vs. decelerating directions.
+*Hypothesis 1 (ACCELERATION PERCEPTION FOR ACCELERATING VS. DECELERATING DIRECTIONS)*: We will test the null hypothesis that horizontal acceleration perception is similar for accelerating and decelerating directions. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration/deceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for the accelerating and decelerating direction. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for accelerating vs. decelerating directions.
 
-*Hypothesis 2 (PSCV FOR ACCELERATING VS. DECELERATING)*: We will test the null hypothesis that the point of constant subjective velocity (PSCV) is similar for accelerating and decelerating directions. The PSCV will be estimated using the quickpsy function of the quickpsy R package with acceleration/deceleration values in the range ± 3.6 m/s^2^ as the explanatory variable, and participant and motion direction as grouping factors [@R-quickpsy]. Psychometric curves with a PSCV outside of the tested range (± 8 m/s^2^) will be excluded from analysis. A single PSCV will be calculated for each motion direction by taking the mean of the PSCVs for each screen duration. A paired-samples t-test  will be performed comparing the the PSCV for the accelerating and decelerating directions.
+*Hypothesis 2 (PSCV FOR ACCELERATING VS. DECELERATING)*: We will test the null hypothesis that the point of subjective constant velocity (PSCV) is similar for accelerating and decelerating directions. The PSCV will be estimated using the quickpsy function of the quickpsy R package with acceleration/deceleration values in the range ± 3.6 m/s^2^ as the explanatory variable, and participant, screen duration and motion direction as grouping factors [@R-quickpsy]. Psychometric curves with a PSCV outside of the tested range (± 8 m/s^2^) will be excluded from analysis. A single PSCV will be calculated for each motion direction by taking the mean of the PSCVs for each screen duration. A paired-samples t-test  will be performed comparing the PSCV for the accelerating and decelerating directions.
 
 Exploratory analyses will compare slope and accuracy measures for accelerating vs. decelerating motion.
 
@@ -226,16 +226,18 @@ sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, p
 
 bias = df %>% 
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
-  summarise(prop_acc=mean(recodeKey)) %>% 
+  summarise(prop_acc=mean(recodeKey)) %>%
+  group_by(subject_id, recodeDir, screen_duration) %>% 
+  summarise(screen_bias=mean(prop_acc)) %>% 
   group_by(subject_id, recodeDir) %>% 
-  summarise(bias=mean(prop_acc)) %>% 
+  summarise(bias=mean(screen_bias)) %>% 
   spread(recodeDir, bias)
 
 bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
 bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
 
 ```
-Using the effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. As the effect sizes are similar for both analyses and the psychometric curve analysis has stricter exclusion criteria, we base the power analysis of off the bias analysis. Therefore, collecting a sample of `r bias_sample_size_needed` participants should provide sufficient power to observe the effect of interest.
+Using the horizontal effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. As the effect sizes are similar for both analyses and the psychometric curve analysis has stricter exclusion criteria, we base the power analysis on the bias analysis. Therefore, collecting a sample of `r bias_sample_size_needed` participants should provide sufficient power to observe the effect of interest.
 
 # References
 
