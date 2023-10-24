@@ -93,7 +93,7 @@ We report below how we determined our sample size, all exclusion criteria, all m
 
 ## Participants
 
-The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in experiment 1. We will collect data until we reach 89 included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 10 minutes to complete. Participants will be paid around £1.34 for their participation, equivalent to an hourly wage of £8.
+The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in experiment 1. We will collect data until we reach 46 included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 10 minutes to complete. Participants will be paid around £1.34 for their participation, equivalent to an hourly wage of £8.
 
 ## Study Design
 
@@ -219,7 +219,7 @@ pscvs = fullFit$thresholds %>%
    
 # Use cohensD to calculate the effect size and then sample size
 effect_size = cohensD(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
-sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
+sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='paired', alternative='two.sided')$n)
 
 
 # Other analysis technique is: for each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for acc and dec motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec motion.
@@ -234,7 +234,7 @@ bias = df %>%
   spread(recodeDir, bias)
 
 bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
-bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='two.sample', alternative='two.sided')$n)
+bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='paired', alternative='two.sided')$n)
 
 ```
 Using the horizontal effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. As the effect sizes are similar for both analyses and the psychometric curve analysis has stricter exclusion criteria, we base the power analysis on the bias analysis. Therefore, collecting a sample of `r bias_sample_size_needed` participants should provide sufficient power to observe the effect of interest.
