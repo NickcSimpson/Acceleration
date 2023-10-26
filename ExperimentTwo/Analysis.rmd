@@ -265,6 +265,9 @@ number_of_final_data_sets = length(unique(df$subject_id))
 
 ```
 
+Number of participant data sets: `r number_of_original_data_sets`.
+Number of included data sets: `r number_of_final_data_sets`.
+
 ## Hypothesis 1 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
 ```{r check_bias_vertical, echo=FALSE, cache=TRUE}
 
@@ -280,7 +283,6 @@ bias = df %>%
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')
 ```
 
-**Need to change this to true results**
 People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
 
 ## Hypothesis 2 (PSCV FOR ACC VS. DEC)
@@ -300,8 +302,7 @@ horizontal_pscvs = pscvs %>%
 horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired='TRUE')
 ```
 
-**Need to change this to true results**
-People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
+People do not have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
 
 
 # References
