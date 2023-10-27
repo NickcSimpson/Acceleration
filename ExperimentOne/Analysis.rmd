@@ -277,13 +277,13 @@ bias = df %>%
 vertical_bias = t.test(bias$UP, bias$DOWN, paired='TRUE')
 ```
 
-People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_bias)$statistic`).
+People have a bias to report downward moving objects as having a less positive acceleration than upward moving objects (`r apa_print(vertical_bias)$statistic`).
 
 ## Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
 ```{r check_bias_horizontal, echo=FALSE, cache=TRUE}
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')
 ```
-People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
+People have a bias to report the 'accelerating' objects as having a less positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
 
 ## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
 ```{r check_pscv_vertical, echo=FALSE, cache=TRUE}
@@ -301,7 +301,7 @@ vertical_pscvs = pscvs %>%
 
 vertical_pscv = t.test(vertical_pscvs$UP, vertical_pscvs$DOWN, paired='TRUE')
 ```
-People have a bias to report downward moving objects as having a more positive acceleration than upward moving objects (`r apa_print(vertical_pscv)$statistic`).
+The PSCV for downward moving objects is more positive than the PSCV for upward moving objects (`r apa_print(vertical_pscv)$statistic`).
 
 ## Hypothesis 6 (PSCV FOR ACC VS. DEC)
 ```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
@@ -310,7 +310,7 @@ horizontal_pscvs = pscvs %>%
 
 horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired='TRUE')
 ```
-People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
+The PSCV for 'accelerating' objects is more positive than the PSCV for 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
 
 
 # Next Steps
