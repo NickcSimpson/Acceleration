@@ -269,7 +269,7 @@ Number of participant data sets: `r number_of_original_data_sets`.
 Number of included data sets: `r number_of_final_data_sets`.
 
 ## Hypothesis 1 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
-```{r check_bias_vertical, echo=FALSE, cache=TRUE}
+```{r check_bias_horizontal, echo=FALSE, cache=TRUE}
 
 bias = df %>% 
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
@@ -281,14 +281,37 @@ bias = df %>%
   spread(recodeDir, bias)
 
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')
+
+plot_bias = bias %>%
+  mutate(gradient = if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive')) %>%
+  pivot_longer(cols = c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'bias') %>%
+  mutate(x = if_else(recodeDir == 'ACCELERATING', 0, 1))
+
+ggplot(d = plot_bias, aes(x=x, y=bias, colour=gradient)) +
+  geom_line(aes(group=subject_id)) +
+  geom_point(aes(group=subject_id)) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black"
+   ) +
+   stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 3
+   ) +
+  xlab('Condition') +
+  ylab('Bias') +
+  ggtitle('Bias to report accelerating.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
 ```
 
-People have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
+People have a bias to report the 'accelerating' objects as having a less positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
 
 ## Hypothesis 2 (PSCV FOR ACC VS. DEC)
-```{r check_pscv_vertical, echo=FALSE, cache=TRUE}
+```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
 fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
-#plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
 
 pscvs = fullFit$thresholds %>%
   pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
@@ -300,10 +323,118 @@ horizontal_pscvs = pscvs %>%
   filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
 
 horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired='TRUE')
+
+averageFit = quickpsy(d = df %>% filter(subject_id %in% horizontal_pscvs$subject_id), x=acceleration, k=recodeKey, grouping = .(recodeDir, screen_duration), bootstrap = "none");
+
+averageFitOverSD = quickpsy(d = df %>% filter(subject_id %in% horizontal_pscvs$subject_id), x=acceleration, k=recodeKey, grouping = .(recodeDir), bootstrap = "none");
+
+averageFullFit = fullFit$curves %>%
+  filter(subject_id %in% horizontal_pscvs$subject_id) %>%
+  group_by(recodeDir, screen_duration, x) %>%
+  reframe(y = mean(y))
 ```
 
-People do not have a bias to report the 'accelerating' objects as having a more positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
+The PSCV for 'accelerating' objects is insignificantly more positive than the PSCV for 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
 
+### Plotting all participants
+
+```{r plot_all_pscv, echo=FALSE}
+plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
+```
+
+### Plotting a psychometric curve generated from treating all responses from all included subjects as one with screen durations separate
+
+```{r plot_one_pscv, echo=FALSE}
+plotcurves(averageFit) + xlim(-4,4)
+```
+
+### Plotting a psychometric curve generated from treating all responses from all included subjects as one
+
+```{r plot_av_pscv, echo=FALSE}
+plotcurves(averageFitOverSD) + xlim(-4,4)
+```
+
+### Plotting the average value for each subject's psychometric curve for each x value (different x values for screen duration so cannot average)
+
+```{r plot_average_pscv, echo=FALSE}
+ggplot(averageFullFit, aes(x=x, y=y, colour = recodeDir)) + geom_line() + facet_grid(cols=vars(screen_duration))
+```
+
+### Plotting the PSCVs for each participant averaged over screen duration
+
+```{r plot_pscvs, echo=FALSE, cache=TRUE}
+plot_horizontal_pscvs = bias %>%
+  mutate(gradient = if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive')) %>%
+  pivot_longer(cols=c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'thre') %>%
+  mutate(x = if_else(recodeDir == 'ACCELERATING', 0, 1))
+
+ggplot(plot_horizontal_pscvs, aes(x=x, y=thre, colour = gradient)) +
+  geom_line(aes(group=subject_id)) +
+  geom_point(aes(group=subject_id)) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black"
+  ) +
+    stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 3
+  ) +
+  ggtitle('Participant PSCV, averaged over screen duration.') +
+  xlab('PSCVs') +
+  ylab('Bias') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
+```
+
+## Looking only at constant velocity trials
+
+Using the trials with constant velocity, we find the proportion of accelerating responses in the 'accelerating' and 'decelerating' directions. A tendency to report constant velocity trials as accelerating indicate that there is a bias to perceive acceleration. A tendency to report constant velocity trials as decelerating indicate that there is a bias to perceive deceleration.
+
+```{r const_vel, echo=FALSE}
+jitter = function(subject_id){
+  set.seed(strtoi(substr(subject_id, 1, 4), 16L))
+  return(rnorm(1, 0, 0.1))
+}
+
+df_const = df %>%
+  filter(as.numeric(acceleration)==0) %>%
+  group_by(subject_id, recodeDir) %>%
+  reframe(prop_acc_resp = mean(recodeKey)) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp') %>%
+  mutate(gradient = if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive')) %>%
+  pivot_longer(cols = c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'prop_acc_resp') %>%
+  mutate(pos = if_else(recodeDir == 'ACCELERATING', 0, 1)) %>%
+  mutate(jitter = sapply(subject_id, jitter)) %>%
+  mutate(x = pos+jitter)
+
+ggplot(d = df_const, aes(x=pos, y=prop_acc_resp, colour=gradient)) +
+  geom_line(aes(x=x, group = subject_id)) +
+  geom_point(aes(x=x, group = subject_id)) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black"
+   ) +
+   stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 3
+   ) +
+  xlab('Condition') +
+  ylab('Proportion of accelerating responses') +
+  ggtitle('Proportion of accelerating responses to constant velocity objects.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
+
+df_const_stats = df_const %>%
+  select(subject_id, recodeDir, prop_acc_resp) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp')
+const_stat = t.test(df_const_stats$ACCELERATING, df_const_stats$DECELERATING, paired = 'TRUE')
+```
+
+People respond that a constant velocity object is accelerating more often in the 'decelerating' direction than the 'accelerating' direction (`r apa_print(const_stat)$statistic`).
 
 # References
 
