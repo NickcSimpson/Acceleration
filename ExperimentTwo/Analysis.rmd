@@ -269,7 +269,7 @@ Number of participant data sets: `r number_of_original_data_sets`.
 Number of included data sets: `r number_of_final_data_sets`.
 
 ## Hypothesis 1 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
-```{r check_bias_horizontal, echo=FALSE, cache=TRUE}
+```{r check_bias_horizontal, echo=FALSE, cache=TRUE, fig.cap="Participant bias to report accelerating for the two conditions. Individual participants are shown in faint colours with the colour reflecting the sign of the gradient of the line. A positive gradient (blue) means that the participant responded accelerating more often for the decelerating condition, which implies a suppression effect. A negative gradient (red) means that the participant responded accelerating more often for the accelerating condition, which implies an enhancement effect. The mean across participants is shown in black."}
 
 bias = df %>% 
   group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
@@ -287,20 +287,37 @@ plot_bias = bias %>%
   pivot_longer(cols = c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'bias') %>%
   mutate(x = if_else(recodeDir == 'ACCELERATING', 0, 1))
 
+if(horizontal_bias$p.value<0.001){
+  annotation = '***';
+} else if(horizontal_bias$p.value<0.01){
+  annotation = '**';
+} else if(horizontal_bias$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
 ggplot(d = plot_bias, aes(x=x, y=bias, colour=gradient)) +
-  geom_line(aes(group=subject_id)) +
-  geom_point(aes(group=subject_id)) +
+  geom_line(aes(group=subject_id), alpha = 0.4) +
+  geom_point(aes(group=subject_id), alpha = 0.4) +
   stat_summary(
     geom = "linerange",
     fun.data = mean_sdl, 
     fun.args = list(mult = 1),
-    colour = "black"
+    colour = "black", size = 1
    ) +
    stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
     geom = "point",
     fun = mean,
-    colour = "black", size = 3
+    colour = "black", size = 2
    ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(0.75,0.75)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=0.76, label = annotation) +
   xlab('Condition') +
   ylab('Bias') +
   ggtitle('Bias to report accelerating.') +
@@ -338,53 +355,70 @@ The PSCV for 'accelerating' objects is insignificantly more positive than the PS
 
 ### Plotting all participants
 
-```{r plot_all_pscv, echo=FALSE}
+```{r plot_all_pscv, echo=FALSE, fig.cap="Psychometric curves for all participants after removing those with a absolute PSCV greater than 8. The vertical lines show the PSCV for each participant."}
 plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
 ```
 
 ### Plotting a psychometric curve generated from treating all responses from all included subjects as one with screen durations separate
 
-```{r plot_one_pscv, echo=FALSE}
+```{r plot_one_pscv, echo=FALSE, fig.cap="Psychometric curves fit to the data when all subjects' responses are treated as one."}
 plotcurves(averageFit) + xlim(-4,4)
 ```
 
 ### Plotting a psychometric curve generated from treating all responses from all included subjects as one
 
-```{r plot_av_pscv, echo=FALSE}
+```{r plot_av_pscv, echo=FALSE, fig.cap="Psychometric curves fit to the data when all subjects' responses are treated as one averaged over screen duration."}
 plotcurves(averageFitOverSD) + xlim(-4,4)
 ```
 
 ### Plotting the average value for each subject's psychometric curve for each x value (different x values for screen duration so cannot average)
 
-```{r plot_average_pscv, echo=FALSE}
+```{r plot_average_pscv, echo=FALSE, fig.cap="Taking the mean y value for each participant's fitted psychometric curve for every x value in figure [@ref(fig:plot_all_pscv)]."}
 ggplot(averageFullFit, aes(x=x, y=y, colour = recodeDir)) + geom_line() + facet_grid(cols=vars(screen_duration))
 ```
 
 ### Plotting the PSCVs for each participant averaged over screen duration
 
-```{r plot_pscvs, echo=FALSE, cache=TRUE}
-plot_horizontal_pscvs = bias %>%
+```{r plot_pscvs, echo=FALSE, cache=TRUE, fig.cap="Participant PSCVs extracted from figure [@ref(fig:plot_all_pscv)]. The colour of the individual data corresponds to the gradient of the line. A positive gradient (blue) means that "}
+plot_horizontal_pscvs = horizontal_pscvs %>%
   mutate(gradient = if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive')) %>%
   pivot_longer(cols=c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'thre') %>%
   mutate(x = if_else(recodeDir == 'ACCELERATING', 0, 1))
 
+if(horizontal_pscv$p.value<0.001){
+  annotation = '***';
+} else if(horizontal_pscv$p.value<0.01){
+  annotation = '**';
+} else if(horizontal_pscv$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
 ggplot(plot_horizontal_pscvs, aes(x=x, y=thre, colour = gradient)) +
-  geom_line(aes(group=subject_id)) +
-  geom_point(aes(group=subject_id)) +
+  geom_line(aes(group=subject_id), alpha = 0.4) +
+  geom_point(aes(group=subject_id), alpha = 0.4) +
   stat_summary(
     geom = "linerange",
     fun.data = mean_sdl, 
     fun.args = list(mult = 1),
-    colour = "black"
+    colour = "black", size = 1
   ) +
-    stat_summary(
+  stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
     geom = "point",
     fun = mean,
-    colour = "black", size = 3
-  ) +
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(1,1)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=1.1, label = annotation) +
   ggtitle('Participant PSCV, averaged over screen duration.') +
-  xlab('PSCVs') +
-  ylab('Bias') +
+  xlab('Condition') +
+  ylab('PSCV') +
   scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
 ```
 
@@ -409,32 +443,60 @@ df_const = df %>%
   mutate(jitter = sapply(subject_id, jitter)) %>%
   mutate(x = pos+jitter)
 
-ggplot(d = df_const, aes(x=pos, y=prop_acc_resp, colour=gradient)) +
-  geom_line(aes(x=x, group = subject_id)) +
-  geom_point(aes(x=x, group = subject_id)) +
-  stat_summary(
-    geom = "linerange",
-    fun.data = mean_sdl, 
-    fun.args = list(mult = 1),
-    colour = "black"
-   ) +
-   stat_summary(
-    geom = "point",
-    fun = mean,
-    colour = "black", size = 3
-   ) +
-  xlab('Condition') +
-  ylab('Proportion of accelerating responses') +
-  ggtitle('Proportion of accelerating responses to constant velocity objects.') +
-  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
-
 df_const_stats = df_const %>%
   select(subject_id, recodeDir, prop_acc_resp) %>%
   pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp')
 const_stat = t.test(df_const_stats$ACCELERATING, df_const_stats$DECELERATING, paired = 'TRUE')
+
+if(const_stat$p.value<0.001){
+  annotation = '***';
+} else if(const_stat$p.value<0.01){
+  annotation = '**';
+} else if(const_stat$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
+ggplot(d = df_const, aes(x=pos, y=prop_acc_resp, colour=gradient)) +
+  geom_line(aes(x=x, group = subject_id), alpha = 0.4) +
+  geom_point(aes(x=x, group = subject_id), alpha = 0.4) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black", size = 1
+  ) +
+  stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(1,1)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=1, label = annotation) +
+  xlab('Condition') +
+  ylab('Proportion of accelerating responses') +
+  ggtitle('Proportion of accelerating responses to constant velocity objects.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
 ```
 
 People respond that a constant velocity object is accelerating more often in the 'decelerating' direction than the 'accelerating' direction (`r apa_print(const_stat)$statistic`).
+
+## Power Comparison
+
+Take the power from each study and compare.
+```{r power_comparison, echo=FALSE}
+exp_one_bias_power = bias_effect_size;
+exp_one_pscv_power = effect_size;
+exp_two_bias_power = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
+exp_two_pscv_power = cohensD(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, method = "paired")
+```
+For the bias analysis, experiment one has an effect size of `r exp_one_bias_power` and experiment two has an effect size of `r exp_two_bias_power`. For the PSCV analysis, experiment one has an effect size of `r exp_one_pscv_power` and experiment two has an effect size of `r exp_two_pscv_power`.
 
 # References
 
