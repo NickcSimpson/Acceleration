@@ -1,6 +1,6 @@
 ---
-title             : "Transient and stable predictions affect motion perception, Exp. 3 - Pre-registration document"
-shorttitle        : "Transient and stable predictions affect motion perception, Exp. 3 - Pre-registration document"
+title             : "Transient and stable predictions affect motion perception, colour cues - Pre-registration document"
+shorttitle        : "Transient and stable predictions affect motion perception, colour cues - Pre-registration document"
 
 author: 
   - name          : "Matan Mazor"
@@ -48,6 +48,7 @@ footnotelist      : no
 linenumbers       : yes
 mask              : no
 draft             : no
+fig_caption      : yes
 
 documentclass     : "apa6"
 classoption       : "man"
@@ -71,7 +72,8 @@ packages = c(
     'gridExtra',
     'quickpsy',
     'cowplot',
-    'grid'
+    'grid',
+    'BayesFactor'
   )
 groundhog.library(packages, "2023-10-16")
 r_refs("references.bib")
@@ -86,7 +88,8 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Motivation
 
-In a previous experiment, we found perceptual repulsion effects for expectations about the acceleration of objects on the horizontal axis. An expectation was induced such that objects would accelerate more often in one direction (accelerating direction) and decelerate more often in the other (decelerating direction). Objects in the accelerating direction were perceived as accelerating less than objects in the decelerating direction. The observed repulsion from expectation contrasts with many attractive perceptual expectation effects. Due to the expectation depending on the direction of travel of the object, it is possible that adaptation-like effects could create the repulsive bias. Therefore, the current study aims to eliminate any adaptation-like effects by inducing the expectation through the colour of the stimulus as opposed to the direction of motion.
+In a previous experiment, we found perceptual repulsion effects from expectations about the acceleration of objects on the horizontal axis. An expectation was induced such that objects would accelerate more often in one direction (accelerating direction) and decelerate more often in the other (decelerating direction). Objects in the accelerating direction were perceived as accelerating less than objects in the decelerating direction. The observed repulsion from expectation contrasts with attractive perceptual expectation effects that are more typically observed in vision. In the current study, we ask whether the repulsive effect in acceleration perception was caused by motion direction being the cue or whether the nature of the cue is irrelevant to the perceptual effect. Therefore, we will replicate the study with the colour of the ball, rather than the direction of motion, predicting the acceleration value and observe whether the repulsion effect persists.
+
 
 # Methods
 
@@ -94,32 +97,29 @@ We report below how we determined our sample size, all exclusion criteria, all m
 
 ## Participants
 
-The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in previous experiments. We will collect data until we reach TODO!! included participants (after applying our pre-registered exclusion criteria). The entire experiment will take 10 minutes to complete. Participants will be paid around £1.34 for their participation, equivalent to an hourly wage of £8.
+The research complies with all relevant ethical regulations, and was approved by the Research Ethics Committee of Birkbeck, University of London (study ID number 1812000). Participants will be recruited via Prolific, and will give informed consent prior to their participation. To be eligible to take part in this study, their Prolific approval rate will need to be 95% or higher, their reported first language English, their age between 18 and 60, and they cannot have taken part in previous experiments. We will collect data until a Bayesian t-test offers sufficient evidence for (BF>3), or against (BF<1/3), the null hypothesis described below, or until we reach a pre-specified maximum number of 200 included participants. The entire experiment will take approximately 15 minutes to complete. Participants will be paid £2 for their participation, approximately equivalent to an hourly wage of £8.
 
 ## Study Design
 
-Participants will see a light grey square displayed over 80% of the screen height with a virtual height and width of 4 m (Fig. \@ref(fig:design1)). On each trial, a circle, with virtual diameter of 40cm (10% of the square height) travels either left or right across the entire width of the grey square. It can be accelerating, decelerating, or travelling at a constant velocity. Participants are asked to press the 'A' key if they think the circle is accelerating and the 'D' key if they think it is decelerating. They can respond as soon as the circle disappears from the square and there is no time limit for their response. Participants are given written instructions prior to the task and at all times are shown the instructions "accelerating: a", "decelerating: d", and the number of trials completed in the current block. The next trial starts 1500 ms after a response has been made.
+Participants will see a light grey square displayed over 80% of the screen height with a virtual height and width of 4 m (Fig. \@ref(fig:design1)). On each trial, a circle, with virtual diameter of 40cm (10% of the square height) travels either left or right across the entire width of the grey square. It can be accelerating, decelerating, or travelling at a constant velocity. Participants are asked to press the 'A' key if they think the circle is accelerating and the 'D' key if they think it is decelerating. They can respond as soon as the circle disappears from the square and there is no time limit for their response. Participants are given written instructions prior to the task and at all times are shown the instructions "accelerating: a", "decelerating: d", and the number of trials completed in the current block. The next trial starts 1000 ms after a response has been made.
 
-```{r design1, echo=FALSE, fig.cap="**Layout.** A light grey square is constantly shown on the screen. On each trial, a coloured circle travels across the square. Participants must decide if the circle is accelerating or decelerating (here orange is accelerating and purple is decelerating) and can respond once it has left the square.", out.width = '40%'}
-knitr::include_graphics(c("Orange.png", "Purple.png"))
-#ggdraw() + 
- # draw_image("Orange.png", width = 0.5) + 
-  #draw_image("Purple.png", width = 0.5, x = 0.5)
+```{r design1, echo=FALSE, fig.cap="**Stimuli.** A light grey square is constantly shown on the screen. On each trial, a coloured circle travels across the square. Participants must decide if the circle is accelerating or decelerating (here orange is accelerating and purple is decelerating) and can respond once it has left the square.", out.width = '100%'}
+knitr::include_graphics("Screen.png")
 ```
 
-To avoid participants using the amount of time the circle is on the screen as an indication of acceleration or deceleration, the circle remains on the screen for one of two screen durations, 1000 or 1500 ms. For each of the two screen durations, 11 equally spaced acceleration values are chosen from the range of ± $\frac{2 \cdot square \: length}{screen \: duration ^ 2}$. A positive skew is given to one colour (Fig. \@ref(fig:design2), bottom row, hereafter accelerating colour) and a negative skew to the other one (Fig. \@ref(fig:design2), top row, hereafter decelerating colour), randomly assigned per participant. The skewed distributions have a mean acceleration of ± 1.74 m/s^2^ and also include three extreme trials with maximal acceleration/deceleration. These extreme values are presented in the first block on the 1st, 3rd, and 5th trial of the respective colour to induce a strong expectation early in the experiment. 
+To avoid participants using the amount of time the circle is on the screen as an indication of acceleration or deceleration, the circle remains on the screen for one of two screen durations, 1000 or 1500 ms. For each of the two screen durations, 11 equally spaced acceleration values are chosen from the range of ± $\frac{2 \cdot square \: length}{screen \: duration ^ 2}$. Balls are one of two colours, one colour is given a distribution of acceleration values with more positive than negative acceleration values and a positive mean (Fig. \@ref(fig:design2), bottom row, hereafter accelerating colour). The second colour is given a distribution of acceleration values with more negative than positive acceleration values and a negative mean (Fig. \@ref(fig:design2), top row, hereafter decelerating colour), the accelerating and decelerating colours are randomly assigned per participant. The distributions have a mean acceleration of ± 1.74 m/s^2^ and also include 6 extreme trials with maximal acceleration/deceleration.
 
-```{r design2, echo=FALSE, fig.cap="**Acceleration distributions.** The distribution of acceleration and deceleration values presented for each coloured circle are skewed in order to induce an expectation of acceleration in one colour (bottom panel) and of deceleration in the other (top panel). These skewed distributions have a mean acceleration of ± 1.74 m/s^2^. Long trials (green) remain on the screen for 1500 ms and short trials (blue) for 1000 ms. Extreme trials (red) have maximal acceleration/deceleration and are used to induce a strong expectation within the first five trials for that colour. All extreme trials have a screen duration of 1000 ms.", out.width = '110%'}
+```{r design2, echo=FALSE, fig.cap="**Acceleration distributions.** The distribution of acceleration and deceleration values presented for each coloured circle are shifted to induce an expectation of acceleration for one colour (bottom panel) and of deceleration for the other (top panel). These distributions have a mean acceleration of ± 1.74 m/s^2^. Long trials (green) remain on the screen for 1500 ms and short trials (blue) for 1000 ms. Extreme trials (red) have maximal acceleration/deceleration and are used to induce a strong expectation within the first twenty trials for that colour. All extreme trials have a screen duration of 1000 ms.", out.width = '110%'}
 
 acc_values = c(-8, -6.4, -4.8, -3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -0.7, 0, 0, 0.7, 1.1, 1.4, 1.6, 2.1, 2.8, 3.2, 3.54, 4.8, 6.4, 8);
 acc_types = c("Extreme","Short","Short","Long","Short","Long","Long","Short","Long", "Short", "Long", "Short", "Long", "Long", "Short", "Long","Short","Long","Long","Short","Long","Short","Short","Extreme");
 
 pos = data.frame(
-  acc = c(-3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -1.1, -0.7, -0.7, -0.7, 0, 0, 0, 0, 0.7, 0.7, 0.7, 0.7, 1.1, 1.1, 1.4, 1.4, 1.4, 1.6, 1.6, 1.6, 1.6, 2.1, 2.1, 2.1, 2.1, 2.1, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.54, 3.54, 3.54, 4.8, 4.8, 6.4, 8, 8, 8)
+  acc = rep(c(-3.54, -3.2, -2.8, -2.1, -1.6, -1.4, -1.1, -1.1, -0.7, -0.7, -0.7, 0, 0, 0, 0, 0.7, 0.7, 0.7, 0.7, 1.1, 1.1, 1.4, 1.4, 1.4, 1.6, 1.6, 1.6, 1.6, 2.1, 2.1, 2.1, 2.1, 2.1, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.54, 3.54, 3.54, 4.8, 4.8, 6.4, 8, 8, 8), 2)
 )
 
 neg = data.frame(
-  acc = c(3.54, 3.2, 2.8, 2.1, 1.6, 1.4, 1.1, 1.1, 0.7, 0.7, 0.7, 0, 0, 0, 0, -0.7, -0.7, -0.7, -0.7, -1.1, -1.1, -1.4, -1.4, -1.4, -1.6, -1.6, -1.6, -1.6, -2.1, -2.1, -2.1, -2.1, -2.1, -2.8, -2.8, -2.8, -2.8, -2.8, -2.8, -3.2, -3.2, -3.2, -3.2, -3.2, -3.2, -3.54, -3.54, -3.54, -4.8, -4.8, -6.4, -8, -8, -8)
+  acc = rep(c(3.54, 3.2, 2.8, 2.1, 1.6, 1.4, 1.1, 1.1, 0.7, 0.7, 0.7, 0, 0, 0, 0, -0.7, -0.7, -0.7, -0.7, -1.1, -1.1, -1.4, -1.4, -1.4, -1.6, -1.6, -1.6, -1.6, -2.1, -2.1, -2.1, -2.1, -2.1, -2.8, -2.8, -2.8, -2.8, -2.8, -2.8, -3.2, -3.2, -3.2, -3.2, -3.2, -3.2, -3.54, -3.54, -3.54, -4.8, -4.8, -6.4, -8, -8, -8), 2)
 )
 
 color_table <- tibble(
@@ -127,8 +127,8 @@ color_table <- tibble(
   Color = c("red", "darkgreen", "blue4")
 )
 
-mneg <- ggplot(neg, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(30))) + xlim(-8, 8)
-mpos <- ggplot(pos, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(30))) + xlim(-8, 8)
+mneg <- ggplot(neg, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(60))) + xlim(-8, 8)
+mpos <- ggplot(pos, aes(x=acc)) + geom_density(aes(y = after_stat(density)*(60))) + xlim(-8, 8)
 pneg <- ggplot_build(mneg)
 ppos <- ggplot_build(mpos)
 denseneg = 0;
@@ -139,10 +139,10 @@ for(value in acc_values){
 }
 
 df <- data.frame(
-  plot = c(rep("Negative Skew",24), rep("Positive Skew",24)),
+  plot = c(rep("Negative Mean",24), rep("Positive Mean",24)),
   Acceleration = rep(acc_values, 2),
   Trial = rep(acc_types, 2),
-  Frequency = c(3,1,2,3,6,6,5,4,3,2,4,2,2,3,2,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,2,3,2,2,4,2,3,4,5,6,6,3,2,1,3),
+  Frequency = 2*c(3,1,2,3,6,6,5,4,3,2,4,2,2,3,2,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,2,3,2,2,4,2,3,4,5,6,6,3,2,1,3),
   Density = c(denseneg[-1], densepos[-1])
 )
 
@@ -161,16 +161,19 @@ a <- ggplot(df, aes(x = Acceleration, y = Frequency)) +
         strip.text.y = element_text(size = 10),
         legend.key.size = unit(0.2, 'cm')) + 
   scale_x_continuous(breaks = acc_values) +
+  ylim(0, 13) +
   facet_grid(rows = vars(plot)) 
 a
 ```
 
-The experiment starts with eight practice trials - one accelerating and one decelerating trial for each of the two screen durations and two colours. For the accelerating colour, values of -1.6, -1.4, 3.6, and 8 m/s^2^ are presented and for the decelerating colour, -8, -3.6, 1.4, and 1.6 m/s^2^ are presented. Participants only receive feedback on their performance during practice. Afterwards, they complete 4 blocks of 27 trials with the acceleration values shown in Fig. \@ref(fig:design2) and between each block they can take a short break. The colour, motion direction, acceleration value, and screen duration for each trial are pseudo-randomised.
+The experiment starts with eight practice trials - one accelerating and one decelerating trial for each of the two screen durations and two colours. For the accelerating colour, values of -1.6, -1.4, 3.6, and 8 m/s^2^ are presented and for the decelerating colour, -8, -3.6, 1.4, and 1.6 m/s^2^ are presented. Participants only receive feedback on their performance during practice. Afterwards, they complete 8 blocks of 27 trials with the acceleration values shown in Fig. \@ref(fig:design2) and between each block they can take a short break.
+
+
+The acceleration distributions for each colour contain 6 extreme trials, where the acceleration/deceleration is maximal for the respective colour. These extreme values are all presented, in a random order, in the first 20 trials of that colour to induce a strong expectation early in the experiment. The directions of all trials are pseudo-randomised such that for each acceleration value and colour, the ball travels left and right an equal number of times. The trial colour, direction, and acceleration is randomised across the experiment within the described restrictions.
 
 ### Randomization
 
-The accelerating and decelerating colours for each participant, the colour, the motion direction, the acceleration value, and screen duration for each trial will be determined pseudo-randomly by the Mersenne Twister pseudorandom number generator, initialized in a way that ensures registration time-locking [@mazor2019novel].
-
+For each participant, the accelerating and decelerating colours will be pseudorandomised. Moreover, for each trial, the motion direction, the acceleration value, the ball colour, and screen duration will also be pseudorandomised. Pseudorandomisation will be performed with the Mersenne Twister pseudorandom number generator, initialized in a way that ensures registration time-locking [@mazor2019novel].
 
 ## Data analysis
 
@@ -180,69 +183,17 @@ Participants will be excluded if their overall accuracy falls below 75% for all 
 
 ### Hypotheses and analysis plan
 
-This study is designed to eliminate adaptation-like effects causing a repulsive bias in acceleration perception in the horizontal plane. The data will be analysed in the same way as for the previous experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 2").
+The data will be analysed as explained below using the Bayesian framework, all tests will be two tailed and require a BF>3 to accept the alternate hypothesis and BF<1/3 to accept the null hypothesis. The Bayesian t-tests will be run using the ttestBF function of the r package BayesFactor [@R-BayesFactor]. A scale factor of 0.14, equal to half the previously observed effect size, will be input to control the scale of the prior distribution. All conclusions will be drawn from the Bayesian analysis, however, we will additionally report the relevant frequentist statistics for readers more accustomed to this statistical method.
 
-*Hypothesis 1 (ACCELERATION PERCEPTION FOR ACCELERATING VS. DECELERATING DIRECTIONS)*: We will test the null hypothesis that horizontal acceleration perception is similar for accelerating and decelerating coloured objects. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration/deceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for the screen durations and the accelerating/decelerating colour. The bias for each screen duration will be averaged to give a single value for each colour for each participant. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for accelerating vs. decelerating colours.
+*Hypothesis 1 (ACCELERATION PERCEPTION FOR ACCELERATING VS. DECELERATING COLOURS)*: We will test the null hypothesis that horizontal acceleration perception is similar for coloured objects when one colour is more often shown accelerating and the other is more often shown decelerating. For each participant, the proportion of 'accelerating' responses will be calculated for each acceleration/deceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for the screen durations and the accelerating/decelerating colour. The bias for each screen duration will be averaged to give a single value for each colour and each participant. A Bayesian paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for the accelerating colour compared to the decelerating colour.
 
-*Hypothesis 2 (PSCV FOR ACCELERATING VS. DECELERATING)*: We will test the null hypothesis that the point of subjective constant velocity (PSCV) is similar for accelerating and decelerating colours. The PSCV will be estimated using the quickpsy function of the quickpsy R package with acceleration/deceleration values in the range ± 3.6 m/s^2^ as the explanatory variable, and participant, screen duration and colour as grouping factors [@R-quickpsy]. Psychometric curves with a PSCV outside of the tested range (± 8 m/s^2^) will be excluded from analysis. A single PSCV will be calculated for each colour by taking the mean of the PSCVs for each screen duration. A paired-samples t-test  will be performed comparing the PSCV for the accelerating and decelerating colours.
+*Hypothesis 2 (PSCV FOR ACCELERATING VS. DECELERATING)*: We will test the null hypothesis that the point of subjective constant velocity (PSCV) is similar for coloured objects when one colour is more often shown accelerating and the other is more often shown decelerating. The PSCV will be estimated using the quickpsy function of the quickpsy R package with acceleration/deceleration values in the range ± 3.6 m/s^2^ as the explanatory variable, and participant, screen duration and colour as grouping factors [@R-quickpsy]. Psychometric curves with a PSCV outside of the tested range (± 8 m/s^2^) will be excluded from analysis. A single PSCV will be calculated for each colour by taking the mean of the PSCVs for each screen duration. A Bayesian paired-samples t-test will be performed comparing the PSCV for the accelerating and decelerating colours.
 
-Exploratory analyses will compare slope and accuracy measures for accelerating vs. decelerating motion.
+Exploratory analyses will compare slope and accuracy measures for the accelerating vs. decelerating colours.
 
 ## Sample size justification
 
-```{r calculate_sample_size}
-# Load in experiment one results and filter out the people who's accuracy is <0.75
-# Then adjust data frame for fitting of psychometric curves
-data_frame <- read.csv("../Results/expOneResults.txt");
-df = data_frame %>% 
-  filter(trial_type == "moving-image") %>%
-  mutate(acceleration = as.numeric(acceleration)) %>%
-  mutate(numerical_correct = if_else(correct=='true', 1, if_else(acceleration == 0, NaN, 0))) %>%
-  mutate(recodeKey = if_else(key_response == 'a', 1, if_else(key_response == 'd', 0, NaN))) %>%
-  mutate(recodeDir = if_else((direction == 'RIGHT' & right_bias == 'Positive') | (direction == 'LEFT' & left_bias == 'Positive'), 'ACCELERATING', if_else((direction == 'RIGHT' | direction == 'LEFT'), 'DECELERATING', direction))) %>%
-  group_by(subject_id) %>%
-  mutate(average_accuracy = mean(numerical_correct, na.rm = TRUE)) %>%
-  ungroup() %>%
-  filter(average_accuracy >= 0.75) %>%
-  filter(practice == "false") %>%
-  filter(abs(as.numeric(acceleration))<=3.6)
-
-fullFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(subject_id, recodeDir,screen_duration), bootstrap = "none");
-#plotcurves(fullFit) + xlim(-4,4) + theme(legend.position="none")
-
-# fullFit$thresholds is the pscv for each participant, each direction, and each screen duration
-# We want to ignore vertical directions then mean the pscv for screen duration, then paired samples t-test between accelerating and decelerating
-# We also remove pcsv's that are outside our range of presented values
-pscvs = fullFit$thresholds %>%
-  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
-  pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = "sd_") %>%
-  mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
-  select(subject_id, recodeDir, mean_pscv) %>%
-  pivot_wider(names_from = recodeDir, values_from = mean_pscv) %>%
-  filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
-   
-# Use cohensD to calculate the effect size and then sample size
-effect_size = cohensD(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
-sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='paired', alternative='two.sided')$n)
-
-
-# Other analysis technique is: for each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for acc and dec motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec motion.
-
-bias = df %>% 
-  group_by(subject_id, recodeDir, acceleration, screen_duration) %>% 
-  summarise(prop_acc=mean(recodeKey)) %>%
-  group_by(subject_id, recodeDir, screen_duration) %>% 
-  summarise(screen_bias=mean(prop_acc)) %>% 
-  group_by(subject_id, recodeDir) %>% 
-  summarise(bias=mean(screen_bias)) %>% 
-  spread(recodeDir, bias)
-
-bias_effect_size = cohensD(bias$ACCELERATING, bias$DECELERATING, method = "paired")
-bias_sample_size_needed = ceiling(pwr.t.test(n=NULL, d=bias_effect_size, sig.level=0.05, power=0.95, type='paired', alternative='two.sided')$n)
-
-```
-
-Using the horizontal effect size from the psychometric curve fitting analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r sample_size_needed` is necessary for a power of 0.95. Using the effect size from the bias analysis in the previous preregistered experiment (pre-registration: "Transient and stable predictions affect motion perception, Exp. 1"), a sample size of `r bias_sample_size_needed` is necessary for a power of 0.95. As the effect sizes are similar for both analyses and the psychometric curve analysis has stricter exclusion criteria, we base the power analysis on the bias analysis. Therefore, collecting a sample of `r bias_sample_size_needed` participants should provide sufficient power to observe the effect of interest.
+This study will use a Bayesian stopping rule based on hypothesis 2. We will collect participants until a Bayesian t-test gives a Bayes factor of more than 3, or less than 1/3. The Bayesian t-test will be run with a scale factor of 0.14 using the ttestBF function of the r package BayesFactor [@R-BayesFactor]. We will initially collect 50 participants and perform the Bayesian t-test on the data for hypothesis 2. Then, if the Bayes factor is not above 3 or below 1/3, we will collect an additional 25 participants and re-test the Bayes factor. We will continue this process until enough evidence for or against the null hypothesis is collected, or until the participant cap of 200 included participants is reached.
 
 # References
 
