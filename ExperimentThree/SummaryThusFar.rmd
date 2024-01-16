@@ -141,31 +141,39 @@ for(value in acc_values){
 }
 
 df <- data.frame(
-  plot = c(rep("Vertical",23), rep("Negative Skew",23), rep("Positive Skew",23)),
+  plot = c(rep("Unbiased",23), rep("Negative Mean",23), rep("Positive Mean",23)),
   Acceleration = rep(acc_values, 3),
   Trial = rep(acc_types, 3),
   Frequency = c(0,1,1,2,1,1,3,3,4,2,5,8,5,2,4,3,3,1,1,2,1,1,0,3,1,2,3,6,6,5,4,3,2,4,4,3,2,1,1,1,1,1,1 ,0,0,0,0,0,0,1,1,1,1,1,1,2,3,4,4,2,3,4,5,6,6,3,2,1,3),
   Density = c(densevert[-1], denseneg[-1], densepos[-1])
 )
 
+custom_palette <- c("#CBAACB", "#8FCACA", "#FF968A", "#55CBCD");
+
 a <- ggplot(df, aes(x = Acceleration, y = Frequency)) +
   geom_bar(stat="identity", aes(fill = Trial)) +
   geom_line(aes(y = Density)) +
-  geom_area(aes(y = Density), alpha = 0.2, fill = "#56B4E9") +
-  scale_fill_manual(values = color_table$Color) +
-  #ggtitle("Acceleration Distributions") +
+  geom_area(aes(y = Density), alpha = 0.2, fill = "#ABDEE6") +
+  ggtitle("Figure 2. Acceleration Distributions") +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(axis.text.x=element_text(size=4, angle=90),
         axis.text.y=element_text(size=5),
-        axis.title=element_text(size=10),
-        plot.title=element_text(size=10),
         legend.title=element_text(size=6),
         legend.text=element_text(size=6),
         strip.text.y = element_text(size = 10),
-        legend.key.size = unit(0.2, 'cm')) + 
+        legend.key.size = unit(0.2, 'cm'),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(
+          fill = 'white',
+          color = 'black',
+          linewidth = 1)) +
+  scale_fill_manual(values = custom_palette) +
   scale_x_continuous(breaks = acc_values) +
   facet_grid(rows = vars(plot)) 
 a
+
 ```
 
 ## Experiment Two - Remove Context
@@ -304,7 +312,14 @@ calculate_pscv = function(input){
     mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
     select(subject_id, condition, mean_pscv) %>%
     pivot_wider(names_from = condition, values_from = mean_pscv) %>% 
-    filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
+    mutate(ACCELERATING = if_else(abs(ACCELERATING)>=8, NaN, ACCELERATING)) %>%
+    mutate(DECELERATING = if_else(abs(DECELERATING)>=8, NaN, DECELERATING))
+    #filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8) %>%
+  if('UP' %in% names(output)){
+    output = output %>%
+          mutate(UP = if_else(abs(UP)>=8, NaN, UP)) %>%
+          mutate(DOWN = if_else(abs(DOWN)>=8, NaN, DOWN))
+  }
   
   return(output);
 }
@@ -317,17 +332,18 @@ ggpaired(plot_df,
          cond1 = "ACC",
          cond2 = "DEC",
          id = "subject_id",
-         facet.by = "exp_name",
+         facet.by = c("analysis", "exp_name"),
          color = 'condition',
          line.color = 'gradient',
          line.size = 0.1,
-         palette = "jco",
          short.panel.labs = TRUE,
          title = title,
          xlab = xlab,
-         ylab = ylab,
+         ylab = ylab
          ) +
-  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5)
+  scale_fill_manual(values = custom_palette) +
+  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5) +
+  theme(plot.title = element_text(hjust = 0.5))
 }
 
 data_frame_one = read.csv("../Results/expOneResults.txt");
@@ -344,6 +360,8 @@ bias_three = calculate_bias(df_three);
 
 bias_ttest_one = t.test(bias_one$ACCELERATING, bias_one$DECELERATING, paired='TRUE')
 bias_bayes_one = ttestBF(bias_one$ACCELERATING, bias_one$DECELERATING, paired=TRUE, alternative = 'two.sided')
+bias_ttest_one_vert = t.test(bias_one$DOWN, bias_one$UP, paired='TRUE')
+bias_bayes_one_vert = ttestBF(bias_one$DOWN, bias_one$UP, paired=TRUE, alternative = 'two.sided')
 bias_ttest_two = t.test(bias_two$ACCELERATING, bias_two$DECELERATING, paired='TRUE')
 bias_bayes_two = ttestBF(bias_two$ACCELERATING, bias_two$DECELERATING, paired=TRUE, alternative = 'two.sided')
 bias_ttest_three = t.test(bias_three$ACCELERATING, bias_three$DECELERATING, paired='TRUE')
@@ -353,8 +371,24 @@ pscv_one = calculate_pscv(df_one);
 pscv_two = calculate_pscv(df_two);
 pscv_three = calculate_pscv(df_three);
 
-pscv_ttest_one = t.test(pscv_one$ACCELERATING, pscv_one$DECELERATING, paired='TRUE')
-pscv_bayes_one = ttestBF(pscv_one$ACCELERATING, pscv_one$DECELERATING, paired=TRUE, alternative = 'two.sided')
+#Horizontal and Vertical exp 1
+pscv_one_horizontal = pscv_one %>%
+  select(c('subject_id', 'ACCELERATING', 'DECELERATING')) %>%
+  filter(!is.na(ACCELERATING) & !is.na(DECELERATING))
+pscv_one_vertical = pscv_one %>%
+  select(c('subject_id', 'UP', 'DOWN')) %>%
+  filter(!is.na(UP) & !is.na(DOWN))
+pscv_two = pscv_two %>%
+  select(c('subject_id', 'ACCELERATING', 'DECELERATING')) %>%
+  filter(!is.na(ACCELERATING) & !is.na(DECELERATING))
+pscv_three = pscv_three %>%
+  select(c('subject_id', 'ACCELERATING', 'DECELERATING')) %>%
+  filter(!is.na(ACCELERATING) & !is.na(DECELERATING))
+
+pscv_ttest_one_horizontal = t.test(pscv_one_horizontal$ACCELERATING, pscv_one_horizontal$DECELERATING, paired='TRUE')
+pscv_bayes_one_horizontal = ttestBF(pscv_one_horizontal$ACCELERATING, pscv_one_horizontal$DECELERATING, paired=TRUE, alternative = 'two.sided')
+pscv_ttest_one_vertical = t.test(pscv_one_vertical$DOWN, pscv_one_vertical$UP, paired='TRUE')
+pscv_bayes_one_vertical = ttestBF(pscv_one_vertical$DOWN, pscv_one_vertical$UP, paired=TRUE, alternative = 'two.sided')
 pscv_ttest_two = t.test(pscv_two$ACCELERATING, pscv_two$DECELERATING, paired='TRUE')
 pscv_bayes_two = ttestBF(pscv_two$ACCELERATING, pscv_two$DECELERATING, paired=TRUE, alternative = 'two.sided')
 pscv_ttest_three = t.test(pscv_three$ACCELERATING, pscv_three$DECELERATING, paired='TRUE')
@@ -367,17 +401,21 @@ pscv_bayes_three = ttestBF(pscv_three$ACCELERATING, pscv_three$DECELERATING, pai
 See figure \@ref(fig:hypothesisOnePlot). In experiments one (`r apa_print(bias_ttest_one)$statistic`, `r apa_print(bias_bayes_one)$statistic`) and two (`r apa_print(bias_ttest_two)$statistic`, `r apa_print(bias_bayes_two)$statistic`), the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition (`r apa_print(bias_ttest_three)$statistic`, `r apa_print(bias_bayes_three)$statistic`.").
 
 
-```{r hypothesisOnePlot, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all rersponses are for acceleration, and a bias of 0 meaning all responses are for deceleration. In experiments one and two, the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition."}
+```{r hypothesisOnePlot, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all responses are for acceleration, and a bias of 0 meaning all responses are for deceleration. In experiments one and two, the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition."}
 plot_comparison(rbind(bias_one %>%
+                    select('UP', 'DOWN', 'subject_id') %>%
+                    rename(c('ACCELERATING' = 'DOWN','DECELERATING' = 'UP')) %>%
+                    mutate(exp_name = '1.1 Vertical', analysis = 'BIAS'),
+            bias_one %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp1'),
+                    mutate(exp_name = '1.2 Horizontal', analysis = 'BIAS'),
             bias_two %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp2'),
+                    mutate(exp_name = '2. Horizontal No Context', analysis = 'BIAS'),
             bias_three %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp3')
-                    ), 'Condition', 'Bias', 'Bias to report accelerating.')
+                    mutate(exp_name = '3. Colour Cues', analysis = 'BIAS')
+                    ), 'Condition', 'Bias', 'Figure 3. Bias to report accelerating.')
 ```
 
 ## Hypothesis 2
@@ -385,16 +423,20 @@ plot_comparison(rbind(bias_one %>%
 See figure \@ref(fig:hypothesisTwoPlot). In experiments one `r apa_print(pscv_ttest_one)$statistic`, `r apa_print(pscv_bayes_one)$statistic`) and two `r apa_print(pscv_ttest_two)$statistic`, `r apa_print(pscv_bayes_two)$statistic`), the accelerating condition has a higher pscv when compared to the decelerating condition. In experiment three, the accelerating condition has a lower pscv when compared to the decelerating condition (`r apa_print(pscv_ttest_three)$statistic`, `r apa_print(pscv_bayes_three)$statistic`).
 
 ```{r hypothesisTwoPlot, echo = FALSE, fig.cap="**PSCV Analysis.** The extracted points of subject constant velocity (PSCV) for each participant are plotted on the y axis, with a more positive pscv showing a bias to report declerating, and a more negative pscv showing a bias to report accelerating. In experiments one and two, the accelerating condition has a higher pscv when compared to the decelerating condition. In experiment three, the accelerating condition has a lower pscv when compared to the decelerating condition."}
-plot_comparison(rbind(pscv_one %>%
+plot_comparison(rbind(pscv_one_vertical %>%
+                    select('UP', 'DOWN', 'subject_id') %>%
+                    rename(c('ACCELERATING' = 'DOWN','DECELERATING' = 'UP')) %>%
+                    mutate(exp_name = '1.1 Vertical', analysis = 'PCSV'),
+            pscv_one_horizontal %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp1'),
+                    mutate(exp_name = '1.2 Horizontal', analysis = 'PCSV'),
             pscv_two %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp2'),
+                    mutate(exp_name = '2. Horizontal No Context', analysis = 'PCSV'),
             pscv_three %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-                    mutate(exp_name = 'Exp3')
-                    ), 'Condition', 'PSCV', 'PSCVs for accelerating and decelerating conditions.')
+                    mutate(exp_name = '3. Colour Cues', analysis = 'PCSV')
+                    ), 'Condition', 'PSCV', 'Figure 4. PSCVs for accelerating and decelerating conditions.')
 ```
 
 # Supplementary Material
@@ -446,36 +488,62 @@ plot_comparison(rbind(pscv_one_limits %>%
 
 ## First and Second Halves of Experiment
 
-Experiments one and two have half the number of trials, is the attractive effect due to longer time doing the task/better learned expectations. Of course experiment one has the vertical direction to test this as well.
+Experiments one and two have half the number of trials, is the attractive effect due to longer time doing the task/better learned expectations. As the same trend is seen in both first and second halves, the attraction is not due to experiment length. The significance of these findings are explained from randomly splitting the data below.
 
 ```{r splitAnalysis}
 
-df_three_firsthalf = filter(df_three,
-  as.numeric(trial_index)<sort(unique(as.numeric(df_three$trial_index)))[length(sort(unique(as.numeric(df_three$trial_index))))/2]);
-df_three_secondhalf = filter(df_three,
-  as.numeric(trial_index)>sort(unique(as.numeric(df_three$trial_index)))[length(sort(unique(as.numeric(df_three$trial_index))))/2]);
+calculate_bias_missing_vars = function(input){
+  subject_dfs = split(input, input$subject_id);
+  filtered_df = data.frame(matrix(ncol = ncol(input)+1, nrow = 0));
+  colnames(filtered_df) = c(colnames(input), 'subject_id');
+  for(i in 1:length(subject_dfs)){
+    acc_values = subject_dfs[[i]] %>% 
+      group_by(condition) %>%
+      reframe(acceleration = unique(acceleration)) %>%
+      group_by(condition) %>%
+      filter(-acceleration %in% acceleration)
+    output = data.frame(matrix(ncol = ncol(input), nrow = 0));
+    colnames(output) = colnames(input);
+    for(j in 1:nrow(acc_values)){
+      output = rbind(output, 
+                     subject_dfs[[i]] %>%
+                        filter(condition == as.character(acc_values[j,1]), as.numeric(acceleration) == as.numeric(acc_values[j,2])))
+    }
+    if(nrow(output)>0){
+      filtered_df = rbind(filtered_df, output %>% mutate(subject_id = names(subject_dfs)[i]));
+    }
+  }
+  out = filtered_df %>% 
+    group_by(subject_id, condition, acceleration, screen_duration) %>% 
+    summarise(prop_acc=mean(recodeKey)) %>%
+    group_by(subject_id, condition, screen_duration) %>% 
+    summarise(screen_bias=mean(prop_acc)) %>% 
+    group_by(subject_id, condition) %>% 
+    summarise(bias=mean(screen_bias)) %>% 
+    spread(condition, bias)
+  return(na.omit(out));
+}
 
-bias_three_firsthalf = calculate_bias(df_three_firsthalf);
-bias_three_secondhalf = calculate_bias(df_three_secondhalf);
+df_three_median_found = df_three %>%
+  group_by(subject_id) %>%
+  mutate(median_trial = median(as.numeric(trial_index)))
+half_one = df_three_median_found %>% filter(as.numeric(trial_index)<as.numeric(median_trial))
+half_two = df_three_median_found %>% filter(as.numeric(trial_index)>=as.numeric(median_trial))
+
+bias_three_firsthalf = calculate_bias_missing_vars(half_one %>% select(c('subject_id', 'acceleration', 'condition', 'screen_duration', 'recodeKey')));
+bias_three_secondhalf = calculate_bias_missing_vars(half_two %>% select(c('subject_id', 'acceleration', 'condition', 'screen_duration', 'recodeKey')));
 
 bias_ttest_three_firsthalf = t.test(bias_three_firsthalf$ACCELERATING, bias_three_firsthalf$DECELERATING, paired='TRUE')
 bias_bayes_three_firsthalf = ttestBF(bias_three_firsthalf$ACCELERATING, bias_three_firsthalf$DECELERATING, paired=TRUE, alternative = 'two.sided', rscale=0.14)
 bias_ttest_three_secondhalf = t.test(bias_three_secondhalf$ACCELERATING, bias_three_secondhalf$DECELERATING, paired='TRUE')
 bias_bayes_three_secondhalf = ttestBF(bias_three_secondhalf$ACCELERATING, bias_three_secondhalf$DECELERATING, paired=TRUE, alternative = 'two.sided', rscale=0.14)
 
-#pscv_three_firsthalf = calculate_pscv(df_three_firsthalf);
-#pscv_three_secondhalf = calculate_pscv(df_three_secondhalf);
-
-#pscv_ttest_three_firsthalf = t.test(pscv_three_firsthalf$ACCELERATING, pscv_three_firsthalf$DECELERATING, paired='TRUE')
-#pscv_bayes_three_firsthalf = ttestBF(pscv_three_firsthalf$ACCELERATING, pscv_three_firsthalf$DECELERATING, paired=TRUE, alternative = #'two.sided', rscale=0.14)
-#pscv_ttest_three_secondhalf = t.test(pscv_three_secondhalf$ACCELERATING, pscv_three_secondhalf$DECELERATING, paired='TRUE')
-#pscv_bayes_three_secondhalf = ttestBF(pscv_three_secondhalf$ACCELERATING, pscv_three_secondhalf$DECELERATING, paired=TRUE, alternative = #'two.sided', rscale=0.14)
 ```
 
-See figure \@ref(fig:plotBiasSplit). In experiments one (`r apa_print(bias_ttest_one)$statistic`, `r apa_print(bias_bayes_one)$statistic`) and two (`r apa_print(bias_ttest_two)$statistic`, `r apa_print(bias_bayes_two)$statistic`), the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In the first half of experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition (`r apa_print(bias_ttest_three_firsthalf)$statistic`, `r apa_print(bias_bayes_three_firsthalf)$statistic`."). In the second half of experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition (`r apa_print(bias_ttest_three_secondhalf)$statistic`, `r apa_print(bias_bayes_three_secondhalf)$statistic`.").
+See figure \@ref(fig:plotBiasSplit). In experiments one (`r apa_print(bias_ttest_one)$statistic`, `r apa_print(bias_bayes_one)$statistic`) and two (`r apa_print(bias_ttest_two)$statistic`, `r apa_print(bias_bayes_two)$statistic`), the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. The first half (`r apa_print(bias_ttest_three_firsthalf)$statistic`, `r apa_print(bias_bayes_three_firsthalf)$statistic`.") and second half (`r apa_print(bias_ttest_three_secondhalf)$statistic`, `r apa_print(bias_bayes_three_secondhalf)$statistic`.") of experiment 3 both show non-significant differences between the conditions. The lack of included trials here makes powering near impossible, however, at least we don't see a strong reversal!
 
 
-```{r plotBiasSplit, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all rersponses are for acceleration, and a bias of 0 meaning all responses are for deceleration. In experiments one and two, the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition."}
+```{r plotBiasSplit, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all responses are for acceleration, and a bias of 0 meaning all responses are for deceleration. In experiments one and two, the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition."}
 plot_comparison(rbind(bias_one %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
                     mutate(exp_name = 'Exp1'),
@@ -489,93 +557,6 @@ plot_comparison(rbind(bias_one %>%
                     select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
                     mutate(exp_name = 'Exp3SecondHalf')
                     ), 'Condition', 'Bias', 'Bias to report accelerating.')
-```
-
-
-```{r plotPscvSplit, echo = FALSE, fig.cap="**PSCV Analysis.** CHECK PROSE AND FIG CAP In experiments one `r apa_print(pscv_ttest_one_limits)$statistic`, `r apa_print(pscv_bayes_one_limits)$statistic`) and two `r apa_print(pscv_ttest_two_limits)$statistic`, `r apa_print(pscv_bayes_two_limits)$statistic`), the accelerating condition has a higher pscv when compared to the decelerating condition. In the first half of experiment three, the accelerating condition has a lower pscv when compared to the decelerating condition (`r apa_print(pscv_ttest_three_firsthalf)$statistic`, `r apa_print(pscv_bayes_three_firsthalf)$statistic`). In the second half of experiment three, the accelerating condition has a lower pscv when compared to the decelerating condition (`r apa_print(pscv_ttest_three_secondhalf)$statistic`, `r apa_print(pscv_bayes_three_secondhalf)$statistic`). The extracted points of subject constant velocity (PSCV) for each participant are plotted on the y axis, with a more positive pscv showing a bias to report declerating, and a more negative pscv showing a bias to report accelerating. In experiments one and two, the accelerating condition has a higher pscv when compared to the decelerating condition. In experiment three, the accelerating condition has a lower pscv when compared to the decelerating condition."}
-#plot_comparison(rbind(pscv_one %>%
-#                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-#                    mutate(exp_name = 'Exp1'),
-#            pscv_two %>%
-#                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-#                    mutate(exp_name = 'Exp2'),
-#            pscv_three_firsthalf %>%
-#                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-#                    mutate(exp_name = 'Exp3FirstHalf'),
-#            pscv_three_secondhalf %>%
-#                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
-#                    mutate(exp_name = 'Exp3SecondHalf')
-#                    ), 'Condition', 'PSCV', 'PSCVs for accelerating and decelerating conditions split exp 3.')
-```
-
-## Participant Responses Across Halves
-
-The first and second halves of experiment three have much stronger effects than combined. Why?
-
-```{r splitHalfAnalysis}
-
-calculate_half_bias = function(input){
-  output = input %>% 
-    group_by(subject_id, half, acceleration, screen_duration) %>% 
-    summarise(prop_acc=mean(recodeKey)) %>%
-    group_by(subject_id, half, screen_duration) %>% 
-    summarise(screen_bias=mean(prop_acc)) %>% 
-    group_by(subject_id, half) %>% 
-    summarise(bias=mean(screen_bias)) %>% 
-    spread(half, bias)
-  return(output);
-}
-
-plot_half_comparison = function(input, xlab, ylab, title){
-plot_df = input %>%
-  rename(c('First' = 'FirstHalf','Second' = 'SecondHalf')) %>%
-  mutate(gradient = if_else(First-Second==0, 'Flat', if_else(First-Second<0, 'Increasing', 'Decreasing')))
-ggpaired(plot_df,
-         cond1 = "First",
-         cond2 = "Second",
-         id = "subject_id",
-         facet.by = "Condition",
-         color = "condition",
-         line.color = 'gradient',
-         line.size = 0.1,
-         palette = "jco",
-         short.panel.labs = TRUE,
-         title = title,
-         xlab = xlab,
-         ylab = ylab,
-         ) +
-  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5)
-}
-
-df_three_acc_halves = df_three %>%
-  filter(condition == 'ACCELERATING') %>%
-  mutate(half = if_else(as.numeric(trial_index)<sort(unique(as.numeric(df_three$trial_index)))[length(sort(unique(as.numeric(df_three$trial_index))))/2], 'FirstHalf', 'SecondHalf'))
-  
-df_three_dec_halves = df_three %>%
-  filter(condition == 'DECELERATING') %>%
-  mutate(half = if_else(as.numeric(trial_index)<sort(unique(as.numeric(df_three$trial_index)))[length(sort(unique(as.numeric(df_three$trial_index))))/2], 'FirstHalf', 'SecondHalf'))
-  
-bias_three_acc_half = calculate_half_bias(df_three_acc_halves);
-bias_three_dec_half = calculate_half_bias(df_three_dec_halves);
-
-bias_ttest_three_acc_halves = t.test(bias_three_acc_half$FirstHalf, bias_three_acc_half$SecondHalf, paired='TRUE')
-bias_bayes_three_acc_halves = ttestBF(bias_three_acc_half$FirstHalf, bias_three_acc_half$SecondHalf, paired=TRUE, alternative = 'two.sided', rscale=0.14)
-bias_ttest_three_dec_halves = t.test(bias_three_dec_half$FirstHalf, bias_three_dec_half$SecondHalf, paired='TRUE')
-bias_bayes_three_dec_halves = ttestBF(bias_three_dec_half$FirstHalf, bias_three_dec_half$SecondHalf, paired=TRUE, alternative = 'two.sided', rscale=0.14)
-
-```
-
-See figure \@ref(fig:plotBiasSplitHalf). In the accelerating condition, there is no difference in bias between the halves of the experiment (`r apa_print(bias_ttest_three_acc_halves)$statistic`, `r apa_print(bias_bayes_three_acc_halves)$statistic`). In the decelerating condition, the bias to report accelerating is larger in the second half of the experiment compared to the first (`r apa_print(bias_ttest_three_dec_halves)$statistic`, `r apa_print(bias_bayes_three_dec_halves)$statistic`). Therefore, the effect is weaker when we take both halves into account because ambiguous decelerating cues are more likely to be reported as accelerating, a reversion to the suppression effect.
-
-```{r plotBiasSplitHalf, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all rersponses are for acceleration, and a bias of 0 meaning all responses are for deceleration. In experiments one and two, the accelerating condition has a lower bias for participants to report accelerating when compared to the decelerating condition. In experiment three, the accelerating condition has a higher bias for participants to report accelerating when compared to the decelerating condition."}
-plot_half_comparison(rbind(
-            bias_three_acc_half %>%
-                    select('FirstHalf', 'SecondHalf', 'subject_id') %>%
-                    mutate(Condition = 'Accelerating'),
-            bias_three_dec_half %>%
-                    select('FirstHalf', 'SecondHalf', 'subject_id') %>%
-                    mutate(Condition = 'Decelerating')
-                    ), 'Half', 'Bias', 'Bias to report accelerating for halves of experiment three.')
 ```
 
 ## Bayes Factor Timecourses
@@ -619,6 +600,315 @@ ggplot(bayes_factor_df, aes(x=ParticipantNumber, y=BayesFactor, colour = test_ty
   ggtitle('Bayes factor across time for PSCV analysis ')
 ```
 
+## Separate left and right acceleration groups and compare the effects exp1 (check that a and d responses aren't affecting anything)
+
+```{r directionalResponseBias}
+right_positive = df_one %>% 
+  filter(right_bias == 'Positive')
+
+left_positive = df_one %>% 
+  filter(left_bias == 'Positive')
+
+bias_right = calculate_bias(right_positive);
+bias_left = calculate_bias(left_positive);
+
+bias_ttest_right = t.test(bias_right$ACCELERATING, bias_right$DECELERATING, paired='TRUE')
+bias_bayes_right = ttestBF(bias_right$ACCELERATING, bias_right$DECELERATING, paired=TRUE, alternative = 'two.sided')
+bias_ttest_left = t.test(bias_left$ACCELERATING, bias_left$DECELERATING, paired='TRUE')
+bias_bayes_left = ttestBF(bias_left$ACCELERATING, bias_left$DECELERATING, paired=TRUE, alternative = 'two.sided')
+
+pscv_right = calculate_pscv(right_positive);
+pscv_left = calculate_pscv(left_positive);
+
+pscv_ttest_right = t.test(pscv_right$ACCELERATING, pscv_right$DECELERATING, paired='TRUE')
+pscv_bayes_right = ttestBF(pscv_right$ACCELERATING, pscv_right$DECELERATING, paired=TRUE, alternative = 'two.sided')
+pscv_ttest_left = t.test(pscv_left$ACCELERATING, pscv_left$DECELERATING, paired='TRUE')
+pscv_bayes_left = ttestBF(pscv_left$ACCELERATING, pscv_left$DECELERATING, paired=TRUE, alternative = 'two.sided')
+
+left_vs_right_bias_acc = t.test(bias_right$ACCELERATING, bias_left$ACCELERATING, paired='FALSE')
+left_vs_right_bias_bayes_acc = ttestBF(bias_right$ACCELERATING, bias_left$ACCELERATING,  paired=FALSE, alternative = 'two.sided')
+left_vs_right_bias_dec = t.test(bias_right$DECELERATING, bias_left$DECELERATING, paired='FALSE')
+left_vs_right_bias_bayes_dec = ttestBF(bias_right$DECELERATING, bias_left$DECELERATING,  paired=FALSE, alternative = 'two.sided')
+
+left_vs_right_pscv_acc = t.test(pscv_right$ACCELERATING, pscv_left$ACCELERATING, paired='FALSE')
+left_vs_right_pscv_bayes_acc = ttestBF(pscv_right$ACCELERATING, pscv_left$ACCELERATING,  paired=FALSE, alternative = 'two.sided')
+left_vs_right_pscv_dec = t.test(pscv_right$DECELERATING, pscv_left$DECELERATING, paired='FALSE')
+left_vs_right_pscv_bayes_dec = ttestBF(pscv_right$DECELERATING, pscv_left$DECELERATING,  paired=FALSE, alternative = 'two.sided')
+```
+
+When participants are given the 'expect acceleration when travelling left' condition, the ball is always travelling toward the 'accelerating' option on the screen and toward the 'a' button on the keyboard. Participants in the other group see the opposite. If there is a systematic difference between the groups, there could be a response bias. Regarding figures \@ref(fig:plotBiasResp) and \@ref(fig:plotPSCVResp), the repulsive effect still exists in both left and right accelerating conditions. However, there is a significant difference in the bias found in the accelerating condition between participants in the leftward accelerating group and rightward accelerating group -  participants are biased to respond accelerating in the accelerating direction when left motion is associated with acceleration (`r apa_print(left_vs_right_bias_acc)$statistic`, `r apa_print(left_vs_right_bias_bayes_acc)$statistic`), but not in the decelerating condition (`r apa_print(left_vs_right_bias_dec)$statistic`, `r apa_print(left_vs_right_bias_bayes_dec)$statistic`). The pscv analysis corroborates this finding, a difference in the accelerating condition for direction (`r apa_print(left_vs_right_pscv_acc)$statistic`, `r apa_print(left_vs_right_pscv_bayes_acc)$statistic`), and no difference in the decelerating condition (`r apa_print(left_vs_right_pscv_dec)$statistic`, `r apa_print(left_vs_right_pscv_bayes_dec)$statistic`).
+
+INTERACTION?
+
+```{r plotBiasResp, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all responses are for acceleration, and a bias of 0 meaning all responses are for deceleration."}
+plot_comparison(rbind(bias_right %>%
+                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
+                    mutate(exp_name = 'RightAcc'),
+            bias_left %>%
+                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
+                    mutate(exp_name = 'LeftAcc')
+                    ), 'Condition', 'Bias', 'Bias to report accelerating.')
+```
+
+```{r plotPSCVResp, echo = FALSE, fig.cap="**PSCV Analysis.** The extracted points of subject constant velocity (PSCV) for each participant are plotted on the y axis, with a more positive pscv showing a bias to report declerating, and a more negative pscv showing a bias to report accelerating."}
+plot_comparison(rbind(pscv_right %>%
+                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
+                    mutate(exp_name = 'RightAcc'),
+            pscv_left %>%
+                    select('ACCELERATING', 'DECELERATING', 'subject_id') %>%
+                    mutate(exp_name = 'LeftAcc')
+                    ), 'Condition', 'PSCV', 'PSCVs for accelerating and decelerating conditions.')
+```
+
+## Exp 3 separate left and right (check that a and d responses aren't affecting anything)
+
+```{r directionalResponseBiasEthree}
+calculate_bias_direction = function(input){
+  output = input %>% 
+    group_by(subject_id, direction, acceleration, screen_duration) %>% 
+    summarise(prop_acc=mean(recodeKey)) %>%
+    group_by(subject_id, direction, screen_duration) %>% 
+    summarise(screen_bias=mean(prop_acc)) %>% 
+    group_by(subject_id, direction) %>% 
+    summarise(bias=mean(screen_bias)) %>% 
+    spread(direction, bias)
+  return(output);
+}
+
+calculate_pscv_direction = function(input){
+  fullFit <- quickpsy(d = input, x=acceleration, k=recodeKey, grouping = .(subject_id, direction, screen_duration), bootstrap = "none");
+  
+  output = fullFit$thresholds %>%
+    pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
+    mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
+    select(subject_id, direction, mean_pscv) %>%
+    pivot_wider(names_from = direction, values_from = mean_pscv) %>% 
+    filter(abs(LEFT)<=8 & abs(RIGHT)<=8)
+  
+  return(output);
+}
+
+plot_direction_comparison = function(input, xlab, ylab, title){
+plot_df = input %>%
+  mutate(gradient = if_else(LEFT-RIGHT==0, 'Flat', if_else(LEFT-RIGHT<0, 'Increasing', 'Decreasing')))
+ggpaired(plot_df,
+         cond1 = "LEFT",
+         cond2 = "RIGHT",
+         id = "subject_id",
+         #facet.by = "exp_name",
+         color = 'condition',
+         line.color = 'gradient',
+         line.size = 0.1,
+         palette = "jco",
+         short.panel.labs = TRUE,
+         title = title,
+         xlab = xlab,
+         ylab = ylab,
+         ) +
+  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5) +
+  facet_grid(rows = vars(exp_name), scales = "free")
+}
+
+bias_direction = calculate_bias_direction(df_three);
+
+bias_ttest_direction = t.test(bias_direction$LEFT, bias_direction$RIGHT, paired='TRUE')
+bias_bayes_direction = ttestBF(bias_direction$LEFT, bias_direction$RIGHT, paired=TRUE, alternative = 'two.sided')
+
+pscv_direction = calculate_pscv_direction(df_three);
+
+pscv_ttest_direction = t.test(pscv_direction$LEFT, pscv_direction$RIGHT, paired='TRUE')
+pscv_bayes_direction = ttestBF(pscv_direction$LEFT, pscv_direction$RIGHT, paired=TRUE, alternative = 'two.sided')
+```
+
+In experiment 3, the rightward and leftward motion should produce identical responses. Regarding figure \@ref(fig:plotBiasDirERthree), there is a significant bias to report accelerating when a ball is travelling left compare to when a ball is travelling right in both the bias analysis (`r apa_print(bias_ttest_direction)$statistic`, `r apa_print(bias_bayes_direction)$statistic`) and the PSCV analysis (`r apa_print(pscv_ttest_direction)$statistic`, `r apa_print(pscv_bayes_direction)$statistic`).
+
+```{r plotBiasDirEthree, echo = FALSE, fig.cap="**Bias Analysis.** The calculated bias values for each participant are plotted on the y axis, with a bias of 1 meaning all responses are for acceleration, and a bias of 0 meaning all responses are for deceleration."}
+plot_direction_comparison(rbind(bias_direction %>%
+                    select('LEFT', 'RIGHT', 'subject_id') %>%
+                    mutate(exp_name = 'BiasAnalysis'),
+            pscv_direction %>%
+                    select('LEFT', 'RIGHT', 'subject_id') %>%
+                    mutate(exp_name = 'PSCVAnalysis')
+                    ), 'Direction', 'PSCV     Bias', 'Bias to report accelerating.')
+```
+
+## All trials where previous response was acc, and all trials where previous response was dec, is there a difference? (previous response bias)
+```{r prevRespBias}
+add_prev_resp = function(input){
+  subject_dfs = split(input, input$subject_id);
+  for(i in 1:length(subject_dfs)){
+    prev_resp = list();
+    for(j in 1:nrow(subject_dfs[[i]])){
+      if(j!=1){
+        prev_resp = c(prev_resp, subject_dfs[[i]][j-1,]$key_response);
+      } else {
+        prev_resp = c(prev_resp, NaN);
+      }
+    }
+    subject_dfs[[i]]$previous_response = prev_resp;
+  }
+  output = bind_rows(subject_dfs, .id = "subject_id") %>%
+    filter(!is.na(previous_response))
+  return(output);
+}
+
+calculate_bias_prev_resp = function(input){
+  output = input %>% 
+    group_by(subject_id, previous_response, acceleration, screen_duration) %>% 
+    summarise(prop_acc=mean(recodeKey)) %>%
+    group_by(subject_id, previous_response, screen_duration) %>% 
+    summarise(screen_bias=mean(prop_acc)) %>% 
+    group_by(subject_id, previous_response) %>% 
+    summarise(bias=mean(screen_bias)) %>% 
+    spread(previous_response, bias)
+  return(output);
+}
+
+calculate_pscv_prev_resp = function(input){
+  fullFit <- quickpsy(d = input, x=acceleration, k=recodeKey, grouping = .(subject_id, previous_response, screen_duration), bootstrap = "none");
+  
+  output = fullFit$thresholds %>%
+    pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
+    mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
+    select(subject_id, previous_response, mean_pscv) %>%
+    pivot_wider(names_from = previous_response, values_from = mean_pscv) %>% 
+    filter(abs(a)<=8 & abs(d)<=8)
+  
+  return(output);
+}
+
+plot_prev_resp_comparison = function(input, xlab, ylab, title){
+plot_df = input %>%
+  mutate(gradient = if_else(a-d==0, 'Flat', if_else(a-d<0, 'Increasing', 'Decreasing')))
+ggpaired(plot_df,
+         cond1 = "a",
+         cond2 = "d",
+         id = "subject_id",
+         #facet.by = "exp_name",
+         color = 'condition',
+         line.color = 'gradient',
+         line.size = 0.1,
+         palette = "jco",
+         short.panel.labs = TRUE,
+         title = title,
+         xlab = xlab,
+         ylab = ylab,
+         ) +
+  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5) +
+  facet_grid(rows = vars(exp_name), scales = "free")
+}
+
+prev_resp_one = add_prev_resp(df_one);
+
+bias_prev_resp_one = calculate_bias_prev_resp(prev_resp_one);
+
+bias_ttest_prev_resp_one = t.test(bias_prev_resp_one$a, bias_prev_resp_one$d, paired='TRUE')
+bias_bayes_prev_resp_one = ttestBF(bias_prev_resp_one$a, bias_prev_resp_one$d, paired=TRUE, alternative = 'two.sided')
+
+pscv_prev_resp_one = calculate_pscv_prev_resp(prev_resp_one);
+
+pscv_ttest_prev_resp_one = t.test(pscv_prev_resp_one$a, pscv_prev_resp_one$d, paired='TRUE')
+pscv_bayes_prev_resp_one = ttestBF(pscv_prev_resp_one$a, pscv_prev_resp_one$d, paired=TRUE, alternative = 'two.sided')
+```
+
+
+```{r plotPrevResp}
+plot_prev_resp_comparison(rbind(bias_prev_resp_one %>%
+                    select('a', 'd', 'subject_id') %>%
+                    mutate(exp_name = 'BiasAnalysis'),
+            pscv_prev_resp_one %>%
+                    select('a', 'd', 'subject_id') %>%
+                    mutate(exp_name = 'PSCVAnalysis')
+                    ), 'Previous Response', 'PSCV     Bias', 'Bias to report accelerating.')
+```
+## Same as above for actual stimulus/cue (stimulus response bias, previous cue response bias)
+# TODO: check all figure captiions iin supplementray and think about what it all means/if it is correct :):):(:(
+```{r prevStimBias}
+add_prev_stim = function(input){
+  subject_dfs = split(input, input$subject_id);
+  for(i in 1:length(subject_dfs)){
+    prev_stim = list();
+    for(j in 1:nrow(subject_dfs[[i]])){
+      if(j!=1){
+        prev_stim = c(prev_stim, if_else(as.numeric(subject_dfs[[i]][j-1,]$accelerating)<0, 'dec', if_else(as.numeric(subject_dfs[[i]][j-1,]$accelerating)>0, 'acc','zero')));
+      } else {
+        prev_stim = c(prev_stim, NaN);
+      }
+    }
+    subject_dfs[[i]]$previous_stimulus = prev_stim;
+  }
+  output = bind_rows(subject_dfs, .id = "subject_id") %>%
+    filter(!is.na(previous_stimulus))
+  return(output);
+}
+
+calculate_bias_prev_resp = function(input){
+  output = input %>% 
+    group_by(subject_id, previous_stimulus, acceleration, screen_duration) %>% 
+    summarise(prop_acc=mean(recodeKey)) %>%
+    group_by(subject_id, previous_stimulus, screen_duration) %>% 
+    summarise(screen_bias=mean(prop_acc)) %>% 
+    group_by(subject_id, previous_stimulus) %>% 
+    summarise(bias=mean(screen_bias)) %>% 
+    spread(previous_stimulus, bias)
+  return(output);
+}
+
+calculate_pscv_prev_resp = function(input){
+  fullFit <- quickpsy(d = input, x=acceleration, k=recodeKey, grouping = .(subject_id, previous_stimulus, screen_duration), bootstrap = "none");
+  
+  output = fullFit$thresholds %>%
+    pivot_wider(names_from = screen_duration, values_from = thre, names_prefix = 'sd_') %>%
+    mutate(mean_pscv = mean(c(sd_1000, sd_1500))) %>%
+    select(subject_id, previous_stimulus, mean_pscv) %>%
+    pivot_wider(names_from = previous_stimulus, values_from = mean_pscv) %>% 
+    filter(abs(a)<=8 & abs(d)<=8)
+  
+  return(output);
+}
+
+plot_prev_stim_comparison = function(input, xlab, ylab, title){
+plot_df = input %>%
+  mutate(gradient = if_else(acc-dec==0, 'Flat', if_else(acc-dec<0, 'Increasing', 'Decreasing')))
+ggpaired(plot_df,
+         cond1 = "acc",
+         cond2 = "dec",
+         id = "subject_id",
+         color = 'condition',
+         line.color = 'gradient',
+         line.size = 0.1,
+         palette = "jco",
+         short.panel.labs = TRUE,
+         title = title,
+         xlab = xlab,
+         ylab = ylab,
+         ) +
+  stat_compare_means(paired = TRUE, label = "p.signif", method="t.test", label.x.npc = 0.5) +
+  facet_grid(rows = vars(exp_name), scales = "free")
+}
+
+prev_stim_one = add_prev_stim(df_one);
+
+bias_prev_stim_one = calculate_bias_prev_stim(prev_stim_one);
+
+bias_ttest_prev_stim_one = t.test(bias_prev_stim_one$acc, bias_prev_stim_one$dec, paired='TRUE')
+bias_bayes_prev_stim_one = ttestBF(bias_prev_stim_one$acc, bias_prev_stim_one$dec, paired=TRUE, alternative = 'two.sided')
+
+pscv_prev_stim_one = calculate_pscv_prev_stim(prev_stim_one);
+
+pscv_ttest_prev_stim_one = t.test(pscv_prev_stim_one$acc, pscv_prev_stim_one$dec, paired='TRUE')
+pscv_bayes_prev_stim_one = ttestBF(pscv_prev_stim_one$acc, pscv_prev_stim_one$dec, paired=TRUE, alternative = 'two.sided')
+```
+
+```{r plotPrevStim}
+plot_prev_stim_comparison(rbind(bias_prev_stim_one %>%
+                    select('a', 'd', 'subject_id') %>%
+                    mutate(exp_name = 'BiasAnalysis'),
+            pscv_prev_stim_one %>%
+                    select('a', 'd', 'subject_id') %>%
+                    mutate(exp_name = 'PSCVAnalysis')
+                    ), 'Previous Response', 'PSCV     Bias', 'Bias to report accelerating.')
+```
 
 # References
 

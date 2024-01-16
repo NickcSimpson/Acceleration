@@ -221,7 +221,6 @@ pscvs = fullFit$thresholds %>%
 effect_size = cohensD(pscvs$ACCELERATING, pscvs$DECELERATING, method = "paired")
 sample_size_needed = ceiling(pwr.t.test(n=NULL, d=effect_size, sig.level=0.05, power=0.95, type='paired', alternative='two.sided')$n)
 
-
 # Other analysis technique is: for each participant, the proportion of 'accelerating' responses will be calculated for each acceleration value within the range ± 3.6 m/s^2^ and then averaged, separately for acc and dec motion. A paired-samples t-test will be performed comparing the proportion of 'accelerating' responses for acc vs. dec motion.
 
 bias = df %>% 

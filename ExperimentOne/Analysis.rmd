@@ -69,7 +69,8 @@ packages = c(
     'ggimage',
     'lattice',
     'gridExtra',
-    'quickpsy'
+    'quickpsy',
+    'Bolstad'
   )
 groundhog.library(packages, "2023-10-16")
 r_refs("r-references.bib")
@@ -274,16 +275,105 @@ bias = df %>%
   summarise(bias=mean(screen_bias)) %>% 
   spread(recodeDir, bias)
 
-vertical_bias = t.test(bias$UP, bias$DOWN, paired='TRUE')
+vertical_bias = t.test(bias$UP, bias$DOWN, paired=TRUE)
+
+vertical_bias_bayes = ttestBF(bias$UP, bias$DOWN, paired=TRUE, alternative = 'two.sided')
 ```
 
 People have a bias to report downward moving objects as having a less positive acceleration than upward moving objects (`r apa_print(vertical_bias)$statistic`).
 
+```{r plot_vertical_biases, echo=FALSE, fig.cap="Plotting the bias to report accelerating for the vertical conditions."}
+
+plot_vertical_bias = bias %>%
+  mutate(gradient = if_else(DOWN-UP==0, 'neutral',if_else(DOWN-UP>0, 'negative', 'positive'))) %>%
+  pivot_longer(cols = c('DOWN', 'UP'), names_to = 'recodeDir', values_to = 'bias') %>%
+  mutate(x = if_else(recodeDir == 'DOWN', 0, 1))
+
+if(vertical_bias$p.value<0.001){
+  annotation = '***';
+} else if(vertical_bias$p.value<0.01){
+  annotation = '**';
+} else if(vertical_bias$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
+ggplot(d = plot_vertical_bias, aes(x=x, y=bias, colour=gradient)) +
+  geom_line(aes(group=subject_id), alpha = 0.4) +
+  geom_point(aes(group=subject_id), alpha = 0.4) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black", size = 1
+   ) +
+   stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(0.75,0.75)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=0.76, label = annotation) +
+  xlab('Condition') +
+  ylab('Bias') +
+  ggtitle('Bias to report accelerating.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("DOWN","UP"))
+```
+
 ## Hypothesis 4 (ACCELERATION PERCEPTION FOR ACC VS. DEC DIRECTIONS)
 ```{r check_bias_horizontal, echo=FALSE, cache=TRUE}
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')
+horizontal_bias_bayes = ttestBF(bias$ACCELERATING, bias$DECELERATING, paired=TRUE, alternative = 'two.sided')
 ```
 People have a bias to report the 'accelerating' objects as having a less positive acceleration than the 'decelerating' objects (`r apa_print(horizontal_bias)$statistic`).
+```{r plot_horizontal_biases, echo=FALSE, fig.cap="Plotting the bias to report accelerating for the horizontal conditions."}}
+plot_horizontal_bias = bias %>%
+  mutate(gradient = if_else(ACCELERATING-DECELERATING==0, 'neutral',if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive'))) %>%
+  pivot_longer(cols = c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'bias') %>%
+  mutate(x = if_else(recodeDir == 'ACCELERATING', 0, 1))
+
+if(horizontal_bias$p.value<0.001){
+  annotation = '***';
+} else if(horizontal_bias$p.value<0.01){
+  annotation = '**';
+} else if(horizontal_bias$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
+ggplot(d = plot_bias, aes(x=x, y=bias, colour=gradient)) +
+  geom_line(aes(group=subject_id), alpha = 0.4) +
+  geom_point(aes(group=subject_id), alpha = 0.4) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black", size = 1
+   ) +
+   stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(0.75,0.75)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=0.76, label = annotation) +
+  xlab('Condition') +
+  ylab('Bias') +
+  ggtitle('Bias to report accelerating.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
+```
 
 ## Hypothesis 5 (PSCV FOR UPWARD VS. DOWNWARD)
 ```{r check_pscv_vertical, echo=FALSE, cache=TRUE}
@@ -300,8 +390,13 @@ vertical_pscvs = pscvs %>%
   filter(abs(UP)<=8 & abs(DOWN)<=8)
 
 vertical_pscv = t.test(vertical_pscvs$UP, vertical_pscvs$DOWN, paired='TRUE')
+vertical_pscv_bayes = ttestBF(vertical_pscvs$UP, vertical_pscvs$DOWN, paired=TRUE, alternative='two.sided')
 ```
 The PSCV for downward moving objects is more positive than the PSCV for upward moving objects (`r apa_print(vertical_pscv)$statistic`).
+```{r plot_mean_pscv, echo=FALSE, fig.cap="Psychometric curves showing the horizontal and vertical biases."}
+fullAverageFit <- quickpsy(d = df, x=acceleration, k=recodeKey, grouping = .(recodeDir,screen_duration), bootstrap = "none");
+plotcurves(fullAverageFit) + xlim(-4,4)
+```
 
 ## Hypothesis 6 (PSCV FOR ACC VS. DEC)
 ```{r check_pscv_horizontal, echo=FALSE, cache=TRUE}
@@ -309,6 +404,7 @@ horizontal_pscvs = pscvs %>%
   filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
 
 horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired='TRUE')
+horizontal_pscv_bayes = ttestBF(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired=TRUE, alternative='two.sided')
 ```
 The PSCV for 'accelerating' objects is more positive than the PSCV for 'decelerating' objects (`r apa_print(horizontal_pscv)$statistic`).
 
@@ -331,6 +427,159 @@ To judge acceleration, multiple time-points are required to be processed. This s
 
 ## Continous Vs Discrete Judgements
 Acceleration values are inherently on a continuous scale which allows us to give responses that align mostly with the truth but may deviate by tiny amounts. Conversely, discrete judgements with large gaps between bins only allow for one thing to be true at a time. So even if the percept is not exactly in that bin, it is still the closest option and creates an enhancement of the expectation rather than a suppression. 
+
+# Supplementary Material
+
+## Constant Velocity Trials
+
+```{r constant_velocity_trials, echo=FALSE, fig.cap="The bias to report accelerating on constant velocity trials."}
+jitter = function(subject_id){
+  set.seed(strtoi(substr(subject_id, 1, 4), 16L))
+  return(rnorm(1, 0, 0.1))
+}
+
+df_const = df %>%
+  filter(as.numeric(acceleration)==0) %>%
+  filter(recodeDir == 'ACCELERATING' | recodeDir == 'DECELERATING') %>%
+  group_by(subject_id, recodeDir) %>%
+  reframe(prop_acc_resp = mean(recodeKey)) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp') %>%
+  mutate(gradient = if_else(ACCELERATING-DECELERATING==0, 'neutral', if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive'))) %>%
+  pivot_longer(cols = c('ACCELERATING', 'DECELERATING'), names_to = 'recodeDir', values_to = 'prop_acc_resp') %>%
+  mutate(pos = if_else(recodeDir == 'ACCELERATING', 0, 1)) %>%
+  mutate(jitter = sapply(subject_id, jitter)) %>%
+  mutate(x = pos+jitter)
+
+df_const_stats = df_const %>%
+  select(subject_id, recodeDir, prop_acc_resp) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp')
+const_stat = t.test(df_const_stats$ACCELERATING, df_const_stats$DECELERATING, paired = 'TRUE')
+
+if(const_stat$p.value<0.001){
+  annotation = '***';
+} else if(const_stat$p.value<0.01){
+  annotation = '**';
+} else if(const_stat$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
+ggplot(d = df_const, aes(x=pos, y=prop_acc_resp, colour=gradient)) +
+  geom_line(aes(x=x, group = subject_id), alpha = 0.4) +
+  geom_point(aes(x=x, group = subject_id), alpha = 0.4) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black", size = 1
+  ) +
+  stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(1,1)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=1, label = annotation) +
+  xlab('Condition') +
+  ylab('Proportion of accelerating responses') +
+  ggtitle('Proportion of accelerating responses to constant velocity objects.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Accelerating","Decelerating"))
+```
+
+```{r plot_vert_const_vel, echo=FALSE, fig.cap="The bias to report accelerating on constant velocity trials."}
+df_const = df %>%
+  filter(as.numeric(acceleration)==0) %>%
+  filter(recodeDir == 'DOWN' | recodeDir == 'UP') %>%
+  group_by(subject_id, recodeDir) %>%
+  reframe(prop_acc_resp = mean(recodeKey)) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp') %>%
+  mutate(gradient = if_else(DOWN-UP==0, 'neutral', if_else(DOWN-UP>0, 'negative', 'positive'))) %>%
+  pivot_longer(cols = c('DOWN', 'UP'), names_to = 'recodeDir', values_to = 'prop_acc_resp') %>%
+  mutate(pos = if_else(recodeDir == 'DOWN', 0, 1)) %>%
+  mutate(jitter = sapply(subject_id, jitter)) %>%
+  mutate(x = pos+jitter)
+
+df_const_stats = df_const %>%
+  select(subject_id, recodeDir, prop_acc_resp) %>%
+  pivot_wider(names_from = 'recodeDir', values_from = 'prop_acc_resp')
+const_stat = t.test(df_const_stats$DOWN, df_const_stats$UP, paired = 'TRUE')
+
+if(const_stat$p.value<0.001){
+  annotation = '***';
+} else if(const_stat$p.value<0.01){
+  annotation = '**';
+} else if(const_stat$p.value<0.05){
+  annotation = '*';
+} else {
+  annotation = 'NS';
+}
+
+ggplot(d = df_const, aes(x=pos, y=prop_acc_resp, colour=gradient)) +
+  geom_line(aes(x=x, group = subject_id), alpha = 0.4) +
+  geom_point(aes(x=x, group = subject_id), alpha = 0.4) +
+  stat_summary(
+    geom = "linerange",
+    fun.data = mean_sdl, 
+    fun.args = list(mult = 1),
+    colour = "black", size = 1
+  ) +
+  stat_summary(
+    geom = "line",
+    fun = mean,
+    colour = "black", size = 1
+   ) +
+  stat_summary(
+    geom = "point",
+    fun = mean,
+    colour = "black", size = 2
+   ) +
+  geom_line(d = data.frame(xline=c(0,1), yline=c(1,1)), aes(x=xline, y=yline), colour = "black") +
+  annotate("text", x=0.5, y=1, label = annotation) +
+  xlab('Condition') +
+  ylab('Proportion of accelerating responses') +
+  ggtitle('Proportion of accelerating responses to constant velocity objects.') +
+  scale_x_continuous(breaks=c(0, 1), labels=c("Down","Up"))
+```
+
+
+## Bayes Factor across time
+
+```{r bayes_across_time, echo=FALSE, fig.cap="Bayes factor calculated for each participant in order of data collection for horizontal data."}
+this_bias = cbind(bias, data.frame(SID = 1:nrow(bias)));
+bayes_factors = list();
+for(i in 2:nrow(this_bias)){
+  this_set = this_bias %>% filter(SID<=i);
+  bayes_factors = c(bayes_factors, as.numeric(as.vector(ttestBF(this_set$ACCELERATING, this_set$DECELERATING, paired=TRUE, alternative='two.sided'))));
+}
+
+pscvs_minus_hor_outliners = pscvs %>% filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
+this_pscv = cbind(pscvs_minus_hor_outliners, data.frame(SID = 1:nrow(pscvs_minus_hor_outliners)));
+bayes_factors_pscv = list();
+for(i in 2:nrow(this_pscv)){
+  this_set = this_pscv %>% filter(SID<=i);
+  bayes_factors_pscv = c(bayes_factors_pscv, as.numeric(as.vector(ttestBF(this_set$ACCELERATING, this_set$DECELERATING, paired=TRUE, alternative='two.sided'))));
+}
+if(length(bayes_factors)>length(bayes_factors_pscv)){
+  bayes_factors_pscv = c(bayes_factors_pscv, rep(NA, length(bayes_factors)-length(bayes_factors_pscv)))
+} else if(length(bayes_factors)<length(bayes_factors_pscv)){
+  bayes_factor = c(bayes_factor, rep(NA, -length(bayes_factors)+length(bayes_factors_pscv)))
+}
+
+bayes_factor_df = data.frame(bayes_factors_bias = as.numeric(bayes_factors), bayes_factors_pscv = as.numeric(bayes_factors_pscv), participant_count = 1:length(bayes_factors)) %>%
+  pivot_longer(cols = c('bayes_factors_pscv', 'bayes_factors_bias'), names_prefix = 'bayes_factors_', names_to = 'test_type', values_to = 'bias')
+
+ggplot(bayes_factor_df, aes(x=participant_count, y=bias, colour = test_type)) +
+  geom_point() +
+  geom_segment(aes(x = 0, xend = nrow(bayes_factor_df), y = 3, yend = 3)) +
+  geom_segment(aes(x = 0, xend = nrow(bayes_factor_df), y = 1/3, yend = 1/3)) +
+  scale_y_continuous(trans='log10')
+```
 
 # References
 

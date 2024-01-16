@@ -144,7 +144,7 @@ a <- ggplot(df, aes(x = Acceleration, y = Frequency)) +
   geom_line(aes(y = Density)) +
   geom_area(aes(y = Density), alpha = 0.2, fill = "#56B4E9") +
   scale_fill_manual(values = color_table$Color) +
-  #ggtitle("Acceleration Distributions") +
+  ggtitle("Acceleration Distributions") +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(axis.text.x=element_text(size=4, angle=90),
         axis.text.y=element_text(size=5),

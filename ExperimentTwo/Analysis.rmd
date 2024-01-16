@@ -69,7 +69,8 @@ packages = c(
     'ggimage',
     'lattice',
     'gridExtra',
-    'quickpsy'
+    'quickpsy',
+    'Bolstad'
   )
 groundhog.library(packages, "2023-10-16")
 r_refs("r-references.bib")
@@ -281,6 +282,7 @@ bias = df %>%
   spread(recodeDir, bias)
 
 horizontal_bias = t.test(bias$ACCELERATING, bias$DECELERATING, paired='TRUE')
+horizontal_bias_bayes = ttestBF(bias$ACCELERATING, bias$DECELERATING, paired=TRUE, alternative = 'two.sided')
 
 plot_bias = bias %>%
   mutate(gradient = if_else(ACCELERATING-DECELERATING>0, 'negative', 'positive')) %>%
@@ -340,6 +342,7 @@ horizontal_pscvs = pscvs %>%
   filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
 
 horizontal_pscv = t.test(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired='TRUE')
+horizontal_pscv_bayes = ttestBF(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DECELERATING, paired=TRUE, alternative = 'two.sided')
 
 averageFit = quickpsy(d = df %>% filter(subject_id %in% horizontal_pscvs$subject_id), x=acceleration, k=recodeKey, grouping = .(recodeDir, screen_duration), bootstrap = "none");
 
@@ -498,6 +501,41 @@ exp_two_pscv_power = cohensD(horizontal_pscvs$ACCELERATING, horizontal_pscvs$DEC
 ```
 For the bias analysis, experiment one has an effect size of `r exp_one_bias_power` and experiment two has an effect size of `r exp_two_bias_power`. For the PSCV analysis, experiment one has an effect size of `r exp_one_pscv_power` and experiment two has an effect size of `r exp_two_pscv_power`.
 
+
+## Supplementary Material
+
+## Bayes Factor across time
+
+```{r bayes_across_time, echo=FALSE, fig.cap="Bayes factor calculated for each participant in order of data collection."}
+this_bias = cbind(bias, data.frame(SID = 1:nrow(bias)));
+bayes_factors = list();
+for(i in 2:nrow(this_bias)){
+  this_set = this_bias %>% filter(SID<=i);
+  bayes_factors = c(bayes_factors, as.numeric(as.vector(ttestBF(this_set$ACCELERATING, this_set$DECELERATING, paired=TRUE, alternative='two.sided'))));
+}
+
+pscvs_minus_hor_outliners = pscvs %>% filter(abs(ACCELERATING)<=8 & abs(DECELERATING)<=8)
+this_pscv = cbind(pscvs_minus_hor_outliners, data.frame(SID = 1:nrow(pscvs_minus_hor_outliners)));
+bayes_factors_pscv = list();
+for(i in 2:nrow(this_pscv)){
+  this_set = this_pscv %>% filter(SID<=i);
+  bayes_factors_pscv = c(bayes_factors_pscv, as.numeric(as.vector(ttestBF(this_set$ACCELERATING, this_set$DECELERATING, paired=TRUE, alternative='two.sided'))));
+}
+if(length(bayes_factors)>length(bayes_factors_pscv)){
+  bayes_factors_pscv = c(bayes_factors_pscv, rep(NA, length(bayes_factors)-length(bayes_factors_pscv)))
+} else if(length(bayes_factors)<length(bayes_factors_pscv)){
+  bayes_factor = c(bayes_factor, rep(NA, -length(bayes_factors)+length(bayes_factors_pscv)))
+}
+
+bayes_factor_df = data.frame(bayes_factors_bias = as.numeric(bayes_factors), bayes_factors_pscv = as.numeric(bayes_factors_pscv), participant_count = 1:length(bayes_factors)) %>%
+  pivot_longer(cols = c('bayes_factors_pscv', 'bayes_factors_bias'), names_prefix = 'bayes_factors_', names_to = 'test_type', values_to = 'bias')
+
+ggplot(bayes_factor_df, aes(x=participant_count, y=bias, colour = test_type)) +
+  geom_point() +
+  geom_segment(aes(x = 0, xend = nrow(bayes_factor_df), y = 3, yend = 3)) +
+  geom_segment(aes(x = 0, xend = nrow(bayes_factor_df), y = 1/3, yend = 1/3)) +
+  scale_y_continuous(trans='log10')
+```
 # References
 
 ```{=tex}
